@@ -48,3 +48,18 @@ FILE *xfopen(const char *path, const char *mode)
 		return f;
 }
 
+void __parseerror(int errcode, int l_num, int l_offset)
+{
+	static char* errstr[] = {
+		"NUM_EXPECTED",			/* Number expect */
+		"SYM_EXPECTED",			/* Symbol Expected */
+		"ADDR_EXPECTED",		/* Addressing Expected */
+		"SYM_TOLONG",			/* Symbol Name is to long */
+		"TO_MANY_DEF_IN_MODULE", 	/* .. */
+		"TO_MANY_USE_IN_MODULE",	
+		"TO_MANY_SYMBOLS",
+		"TO_MANY_INSTR",
+	};
+	printf("Parse Error line %d offset %d: %s\n", l_num, l_offset, errstr[errcode]);
+}
+

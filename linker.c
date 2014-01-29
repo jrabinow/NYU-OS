@@ -1,27 +1,5 @@
 #include "linker.h"
 
-/*
- * I'm still experimenting with the preprocessor… The following function headers and
- * struct declarations should normally be in linker.h, however they seem to conflict
- * with module.h. I can only guess how to solve the problem.
- */
-typedef struct {
-	union {
-		Symbol *symbol;
-		Module **module;
-		Uselist_Symbol *uselist;
-	};
-	size_t size, mem_size;
-} Array;
-
-int symbol_index(Array *symtable, char *symtoken);
-void addto_symbol_table(Array *symtable, Module *m);
-void print_instructions(Module *m, Array *symtable);
-void print_relative(int addr, int val, Module *m);
-void print_external(int addr, int val, Module *m, Array *symtable);
-void get_unused_uselist(Module *m, Array *unused_uselist);
-void print_unused_symbols(Array *symtable, Array *unused_uselist);
-
 int main(int argc, char **argv)
 {
 	int module_id = 0;
@@ -61,11 +39,11 @@ int main(int argc, char **argv)
 	puts("Symbol Table");
 	for(i = 0; i < symtable.size; i++) {
 		printf("%s=%jd", symtable.symbol[i].sym, symtable.symbol[i].offset);
-		if(symtable.symbol[i].status == MULTIPLE_DEFS) {
+		if(symtable.symbol[i].status == MULTIPLE_DEFS)
 			puts(" Error: This variable is multiple times defined; first value used");
-			symtable.symbol[i].status = UNUSED;
-		} else
+		else /* symtable.symbol[i].status == SINGLE_DEF */
 			putchar('\n');
+		symtable.symbol[i].status = UNUSED;
 	}
 	putchar('\n');
 	fclose(input);
@@ -170,21 +148,6 @@ void print_external(int addr, int val, Module *m, Array *symtable)
 	}
 }
 
-void __parseerror(int errcode, int l_num, int l_offset)
-{
-	static char* errstr[] = {
-		"NUM_EXPECTED",			// Number expect
-		"SYM_EXPECTED",			// Symbol Expected
-		"ADDR_EXPECTED",		// Addressing Expected
-		"SYM_TOLONG",			// Symbol Name is to long
-		"TO_MANY_DEF_IN_MODULE", 	// ..
-		"TO_MANY_USE_IN_MODULE",	
-		"TO_MANY_SYMBOLS",
-		"TO_MANY_INSTR",
-	};
-	printf("Parse Error line %d offset %d: %s\n", l_num, l_offset, errstr[errcode]);
-}
-
 void addto_symbol_table(Array *symtable, Module *m)
 {
 	size_t i;
@@ -205,7 +168,7 @@ void addto_symbol_table(Array *symtable, Module *m)
 			symtable->symbol[symtable->size].offset = m->symbols[i]->local_offset + m->base_offset;
 			symtable->symbol[symtable->size].local_offset = m->symbols[i]->local_offset;
 			symtable->symbol[symtable->size].module_id = m->module_id;
-			symtable->symbol[symtable->size++].status = UNUSED;
+			symtable->symbol[symtable->size++].status = SINGLE_DEF;
 		} else
 			symtable->symbol[ret].status = MULTIPLE_DEFS;
 	}
