@@ -11,7 +11,7 @@ Token *read_token(FILE *stream)
 
 	t->token = (char*) xmalloc(mem_size);
 
-	// swallow whitespace
+	/* swallow whitespace */
 	while((c = fgetc(stream)) == ' ' || c == '\t' || c == '\n')
 		switch(c) {
 			case ' ':
@@ -47,7 +47,7 @@ Token *read_token(FILE *stream)
 	lineoffset += i;
 	t->token[i] = '\0';
 	t->size = i;
-	t->token = (char*) realloc(t->token, i+1);	// adjust allocated memory to correct size
+	t->token = (char*) realloc(t->token, i+1);	/* adjust allocated memory to correct size */
 	return t;
 }
 

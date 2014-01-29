@@ -41,8 +41,8 @@ void read_symbol_list(FILE *stream, Module *m, Token *sym_list_size)
 	}
 	num_symbols = atoi(sym_list_size->token);
 
-	if(num_symbols < 0 || num_symbols > MAX_DEFLIST_SIZE) {	// invalid domain
-		__parseerror(TO_MANY_DEF_IN_MODULE, sym_list_size->linenum, sym_list_size->lineoffset);
+	if(num_symbols < 0 || num_symbols > MAX_DEFLIST_SIZE) {	/* invalid domain */
+		__parseerror(TOO_MANY_DEF_IN_MODULE, sym_list_size->linenum, sym_list_size->lineoffset);
 		exit(EXIT_FAILURE);
 	}
 	m->num_symbols = (unsigned short) num_symbols;
@@ -67,7 +67,7 @@ void read_use_list(FILE *stream, Module *m)
 	}
 	num_use_list = atoi(t->token);
 	if(num_use_list < 0 || num_use_list > MAX_USELIST_SIZE) {
-		__parseerror(TO_MANY_USE_IN_MODULE, t->linenum, t->lineoffset);
+		__parseerror(TOO_MANY_USE_IN_MODULE, t->linenum, t->lineoffset);
 		exit(EXIT_FAILURE);
 	}
 	m->num_use_list = (unsigned short) num_use_list;
@@ -101,7 +101,7 @@ void read_program_text(FILE *stream, Module *m)
 	}
 	module_size = atoi(t->token);
 	if(module_size < 0 || (global_offset += module_size) > ADDR_MEM_SIZE) {
-		__parseerror(TO_MANY_INSTR, t->linenum, t->lineoffset);
+		__parseerror(TOO_MANY_INSTR, t->linenum, t->lineoffset);
 		exit(EXIT_FAILURE);
 	}
 	m->module_size = (unsigned short) module_size;
