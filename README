@@ -1,0 +1,5 @@
+Compile:
+$ make
+
+Run:
+$ ./linker path/to/input/file
