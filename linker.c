@@ -12,13 +12,7 @@ int main(int argc, char **argv)
 		return 0;
 	}
 
-	if(atexit((void (*)(void)) &fcloseall) != 0) {
-		fprintf(stderr, "Unable to register atexit function : %s. Exiting now…\n",
-				strerror(errno));
-		exit(EXIT_FAILURE);
-	}
-
-	/* ----- INIT ----- */
+	// ----- INIT ----- //
 	input = xfopen(argv[1], "r");
 
 	linenum = lineoffset = 1;
@@ -29,7 +23,7 @@ int main(int argc, char **argv)
 	symtable.symbol = (Symbol*) xmalloc(64 * sizeof(Symbol));
 	modules.module = (Module**) xmalloc(64 * sizeof(Module*));
 
-	/* ----- 1st PASS ----- */
+	// ----- 1st PASS ----- //
 	while((modules.module[modules.size] = read_module(input, &module_id)) != NULL) {
 		if(modules.size == modules.mem_size)
 			modules.module = (Module**) xrealloc(modules.module, (modules.mem_size <<= 1) * sizeof(Module*));
@@ -38,17 +32,17 @@ int main(int argc, char **argv)
 
 	puts("Symbol Table");
 	for(i = 0; i < symtable.size; i++) {
-		printf("%s=%jd", symtable.symbol[i].sym, symtable.symbol[i].offset);
+		printf("%s=%lu", symtable.symbol[i].sym, (unsigned long) symtable.symbol[i].offset);
 		if(symtable.symbol[i].status == MULTIPLE_DEFS)
 			puts(" Error: This variable is multiple times defined; first value used");
-		else /* symtable.symbol[i].status == SINGLE_DEF */
+		else // symtable.symbol[i].status == SINGLE_DEF
 			putchar('\n');
 		symtable.symbol[i].status = UNUSED;
 	}
 	putchar('\n');
 	fclose(input);
 
-	/* ----- 2nd PASS ----- */
+	// ----- 2nd PASS ----- //
 	puts("Memory Map");
 	unused_uselist.size = 0;
 	unused_uselist.mem_size = 8;
@@ -62,7 +56,7 @@ int main(int argc, char **argv)
 
 	print_unused_symbols(&symtable, &unused_uselist);
 
-	/* ----- CLEANUP ----- */
+	// ----- CLEANUP ----- //
 	for(i = 0; i < symtable.size; i++)
 		free(symtable.symbol[i].sym);
 	for(i = 0; i < modules.size; i++)
@@ -121,9 +115,9 @@ void print_relative(int addr, int val, Module *m)
 	if(val >= 10000)
 		printf("%03d: 9999 Error: Illegal opcode; treated as 9999", addr);
 	else if(val % 1000 > m->module_size)
-		printf("%03d: %04jd Error: Relative address exceeds module size; zero used", addr, opcode(val) + m->base_offset);
+		printf("%03d: %04lu Error: Relative address exceeds module size; zero used", addr, (unsigned long) (opcode(val) + m->base_offset));
 	else
-		printf("%03d: %04jd", addr, val + m->base_offset);
+		printf("%03d: %04lu", addr, (unsigned long) (val + m->base_offset));
 }
 
 void print_external(int addr, int val, Module *m, Array *symtable)
@@ -142,7 +136,7 @@ void print_external(int addr, int val, Module *m, Array *symtable)
 			printf("%03d: %04d Error: %s is not defined; zero used", addr,
 					opcode(val), m->use_list[val % 1000].sym);
 		else {
-			printf("%03d: %04jd", addr, opcode(val) + symtable->symbol[ret].offset);
+			printf("%03d: %04lu", addr, (unsigned long) (opcode(val) + symtable->symbol[ret].offset));
 			symtable->symbol[ret].status = USED;
 		}
 	}
@@ -160,8 +154,8 @@ void addto_symbol_table(Array *symtable, Module *m)
 		ret = symbol_index(symtable, m->symbols[i]->sym);
 		if(ret == -1) {
 			if(m->symbols[i]->local_offset >= m->module_size) {
-				printf("Warning: Module %d: %s to big %jd (max=%d) assume zero relative\n", m->module_id,
-						m->symbols[i]->sym, m->symbols[i]->local_offset, m->module_size - 1);
+				printf("Warning: Module %d: %s to big %lu (max=%lu) assume zero relative\n", m->module_id,
+						m->symbols[i]->sym, (unsigned long) m->symbols[i]->local_offset, (unsigned long) (m->module_size - 1));
 				m->symbols[i]->local_offset = 0;
 			}
 			symtable->symbol[symtable->size].sym = xstrdup(m->symbols[i]->sym);
