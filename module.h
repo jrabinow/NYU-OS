@@ -17,7 +17,6 @@ typedef struct {
 
 extern int global_offset;
 
-
 Module *read_module(FILE *stream, int *module_id);
 void read_symbol_list(FILE *stream, Module *m, Token *sym_list);
 void read_use_list(FILE *stream, Module *m);
