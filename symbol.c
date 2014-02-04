@@ -13,6 +13,7 @@ Symbol *read_symbol(FILE *stream)
 		t = read_token(stream);
 		if(is_valid_int(t)) {
 			s->local_offset = atoi(t->token);
+			s->status = SINGLE_DEF;
 			delete_token(t);
 			return s;
 		} else {

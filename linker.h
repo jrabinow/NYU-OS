@@ -21,7 +21,7 @@ int linenum, lineoffset, global_offset;
 
 typedef struct {
 	union {
-		Symbol *symbol;
+		Symbol **symbol;
 		Module **module;
 		Uselist_Symbol *uselist;
 	};
