@@ -50,8 +50,10 @@ void read_symbol_list(FILE *stream, Module *m, Token *sym_list_size)
 	delete_token(t);
 	if(m->num_symbols > 0) {
 		m->symbols = (Symbol**) xmalloc(m->num_symbols * sizeof(Symbol*));
-		for(i = 0; i < m->num_symbols; i++)
+		for(i = 0; i < m->num_symbols; i++) {
 			m->symbols[i] = read_symbol(stream);
+			m->symbols[i]->module_id = m->module_id;
+		}
 	}
 }
 
