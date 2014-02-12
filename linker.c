@@ -120,7 +120,7 @@ void print_relative(int addr, int val, Module *m)
 
 void print_external(int addr, int val, Module *m, Array *symtable)
 {
-	unsigned index;
+	ssize_t index;
 
 	if(val >= 10000)
 		printf("%03d: 9999 Error: Illegal opcode; treated as 9999", addr);
@@ -142,7 +142,7 @@ void print_external(int addr, int val, Module *m, Array *symtable)
 void addto_symbol_table(Array *symtable, Module *m)
 {
 	size_t i;
-	unsigned index = 0;
+	ssize_t index = 0;
 
 	while(symtable->size + m->num_symbols > symtable->mem_size)
 		symtable->symbol = xrealloc(symtable->symbol, (symtable->mem_size <<= 1) * sizeof(Symbol));
@@ -191,7 +191,7 @@ void print_unused_symbols(Array *symtable, Array *unused_uselist)
 				unused_uselist->uselist[i].module_id, unused_uselist->uselist[i].sym);
 }
 
-bool symbol_index(Array *symtable, char *symtoken, unsigned *index)
+bool symbol_index(Array *symtable, char *symtoken, ssize_t *index)
 {
 	ssize_t start = 0, end = symtable->size - 1;
 	int ret = 0;
