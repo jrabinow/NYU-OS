@@ -29,7 +29,7 @@ typedef struct {
 } Array;
 
 void addto_symbol_table(Array *symtable, Module *m);
-bool symbol_index(Array *symtable, char *symtoken, unsigned *index);
+bool symbol_index(Array *symtable, char *symtoken, ssize_t *index);
 
 void get_unused_uselist(Module *m, Array *unused_uselist);
 void print_unused_symbols(Array *symtable, Array *unused_uselist);
