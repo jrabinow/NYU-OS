@@ -28,15 +28,17 @@ typedef struct {
 	size_t size, mem_size;
 } Array;
 
-void print_immediate(int addr, int val);
-void print_absolute(int addr, int val);
-int symbol_index(Array *symtable, char *symtoken);
 void addto_symbol_table(Array *symtable, Module *m);
-void print_instructions(Module *m, Array *symtable);
-void print_relative(int addr, int val, Module *m);
-void print_external(int addr, int val, Module *m, Array *symtable);
+bool symbol_index(Array *symtable, char *symtoken, unsigned *index);
+
 void get_unused_uselist(Module *m, Array *unused_uselist);
 void print_unused_symbols(Array *symtable, Array *unused_uselist);
+
+void print_instructions(Module *m, Array *symtable);
+void print_immediate(int addr, int val);
+void print_absolute(int addr, int val);
+void print_relative(int addr, int val, Module *m);
+void print_external(int addr, int val, Module *m, Array *symtable);
 
 #define opcode(i)	(((i) / 1000) * 1000)
 

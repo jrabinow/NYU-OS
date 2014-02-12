@@ -12,7 +12,7 @@ int main(int argc, char **argv)
 		return 0;
 	}
 
-	// ----- INIT ----- //
+	/* ----- INIT ----- */
 	input = xfopen(argv[1], "r");
 
 	linenum = lineoffset = 1;
@@ -23,7 +23,7 @@ int main(int argc, char **argv)
 	symtable.symbol = (Symbol**) xmalloc(64 * sizeof(Symbol*));
 	modules.module = (Module**) xmalloc(64 * sizeof(Module*));
 
-	// ----- 1st PASS ----- //
+	/* ----- 1st PASS ----- */
 	while((modules.module[modules.size] = read_module(input, &module_id)) != NULL) {
 		if(modules.size == modules.mem_size)
 			modules.module = (Module**) xrealloc(modules.module, (modules.mem_size <<= 1) * sizeof(Module*));
@@ -35,14 +35,14 @@ int main(int argc, char **argv)
 		printf("%s=%lu", symtable.symbol[i]->sym, (unsigned long) symtable.symbol[i]->offset);
 		if(symtable.symbol[i]->status == MULTIPLE_DEFS)
 			puts(" Error: This variable is multiple times defined; first value used");
-		else // symtable.symbol[i]->status == SINGLE_DEF
+		else /* symtable.symbol[i]->status == SINGLE_DEF */
 			putchar('\n');
 		symtable.symbol[i]->status = UNUSED;
 	}
 	putchar('\n');
 	fclose(input);
 
-	// ----- 2nd PASS ----- //
+	/* ----- 2nd PASS ----- */
 	puts("Memory Map");
 	unused_uselist.size = 0;
 	unused_uselist.mem_size = 8;
@@ -56,7 +56,7 @@ int main(int argc, char **argv)
 
 	print_unused_symbols(&symtable, &unused_uselist);
 
-	// ----- CLEANUP ----- //
+	/* ----- CLEANUP ----- */
 	for(i = 0; i < modules.size; i++)
 		delete_module(modules.module[i]);
 	free(symtable.symbol);
@@ -120,7 +120,7 @@ void print_relative(int addr, int val, Module *m)
 
 void print_external(int addr, int val, Module *m, Array *symtable)
 {
-	int ret;
+	unsigned index;
 
 	if(val >= 10000)
 		printf("%03d: 9999 Error: Illegal opcode; treated as 9999", addr);
@@ -128,14 +128,13 @@ void print_external(int addr, int val, Module *m, Array *symtable)
 		print_immediate(addr, val);
 		printf(" Error: External address exceeds length of uselist; treated as immediate");
 	} else {
-		ret = symbol_index(symtable, m->use_list[val % 1000].sym);
 		m->use_list[val % 1000].status = USED;
-		if(ret == -1)
+		if( ! symbol_index(symtable, m->use_list[val % 1000].sym, &index))
 			printf("%03d: %04d Error: %s is not defined; zero used", addr,
 					opcode(val), m->use_list[val % 1000].sym);
 		else {
-			printf("%03d: %04lu", addr, (unsigned long) (opcode(val) + symtable->symbol[ret]->offset));
-			symtable->symbol[ret]->status = USED;
+			printf("%03d: %04lu", addr, (unsigned long) (opcode(val) + symtable->symbol[index]->offset));
+			symtable->symbol[index]->status = USED;
 		}
 	}
 }
@@ -143,23 +142,24 @@ void print_external(int addr, int val, Module *m, Array *symtable)
 void addto_symbol_table(Array *symtable, Module *m)
 {
 	size_t i;
-	ssize_t ret;
+	unsigned index = 0;
 
-	if(symtable->size + m->num_symbols > symtable->mem_size)
+	while(symtable->size + m->num_symbols > symtable->mem_size)
 		symtable->symbol = xrealloc(symtable->symbol, (symtable->mem_size <<= 1) * sizeof(Symbol));
 
 	for(i = 0; i < m->num_symbols; i++) {
-		ret = symbol_index(symtable, m->symbols[i]->sym);
-		if(ret == -1) {
+		if( ! symbol_index(symtable, m->symbols[i]->sym, &index)) {
 			if(m->symbols[i]->local_offset >= m->module_size) {
 				printf("Warning: Module %u: %s to big %lu (max=%lu) assume zero relative\n", m->module_id,
 						m->symbols[i]->sym, (unsigned long) m->symbols[i]->local_offset, (unsigned long) (m->module_size - 1));
 				m->symbols[i]->local_offset = 0;
 			}
-			symtable->symbol[symtable->size] = m->symbols[i];
-			symtable->symbol[symtable->size++]->offset = m->symbols[i]->local_offset + m->base_offset;
+			memmove(&symtable->symbol[index], &symtable->symbol[index + 1], (symtable->size - index) * sizeof(Symbol*));
+			symtable->symbol[index] = m->symbols[i];
+			symtable->symbol[index]->offset = m->symbols[i]->local_offset + m->base_offset;
+			symtable->size++;
 		} else
-			symtable->symbol[ret]->status = MULTIPLE_DEFS;
+			symtable->symbol[index]->status = MULTIPLE_DEFS;
 	}
 }
 
@@ -183,23 +183,36 @@ void print_unused_symbols(Array *symtable, Array *unused_uselist)
 
 	for(i = 0; i < symtable->size; i++)
 		if(symtable->symbol[i]->status == UNUSED)
-			printf("Warning: %s was defined in module %d but never used\n",
-					symtable->symbol[i]->sym, symtable->symbol[i]->module_id);
+			printf("Warning: Module %u: %s was defined but never used\n",
+				symtable->symbol[i]->module_id,	symtable->symbol[i]->sym);
 
 	for(i = 0; i < unused_uselist->size; i++)
-		printf("Warning: In Module %d %s appeared in the uselist but was not actually used\n",
+		printf("Warning: Module %u: %s appeared in the uselist but was not actually used\n",
 				unused_uselist->uselist[i].module_id, unused_uselist->uselist[i].sym);
 }
 
-int symbol_index(Array *symtable, char *symtoken)
+bool symbol_index(Array *symtable, char *symtoken, unsigned *index)
 {
-	unsigned i = 0;
-	int ret;
+	ssize_t start = 0, end = symtable->size - 1;
+	int ret = 0;
 
-	while(pos < symtable->size) {
-		ret = strcmp(symtoken, symtable->symbol[i]->sym);
+	while(start <= end) {
+		*index = (start + end) / 2;
+		ret = strcmp(symtoken, symtable->symbol[*index]->sym);
 		if(ret > 0)
-			pos 
+			start = *index + 1;
+		else if(ret < 0)
+			end = *index - 1;
+		else
+			return true;
 	}
-	return -1;
+
+	if(ret != 0) {
+		if(ret < 0)
+			*index -= 1;
+		else
+			*index += 1;
+	}
+
+	return false;
 }
