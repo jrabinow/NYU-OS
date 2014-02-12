@@ -38,6 +38,6 @@ Instruction *read_instruction(FILE *stream)
 bool is_valid_addressing(Token *t)
 {
 	return is_valid_token(t) && t->size == 1 && (t->token[0] == 'I' || t->token[0] == 'A' ||
-			t->token[0] == 'R' || t->token[0] == 'E');
+		t->token[0] == 'R' || t->token[0] == 'E');
 }
 

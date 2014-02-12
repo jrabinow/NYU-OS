@@ -6,9 +6,21 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef enum { false = 0, true = 1 } bool;
+#if defined(__STDC__)
+# define C89
+# if defined(__STDC_VERSION__)
+#  define C90
+#  if (__STDC_VERSION__ >= 199901L)
+#   define C99
+#  endif
+# endif
+#endif
 
-#define equals(str1, str2)	(strcmp(str1, str2) == 0)
+#ifdef C99
+# include <stdbool.h>
+#else
+ typedef enum { false = 0, true = 1 } bool;
+#endif
 
 void usage(char *progname);
 

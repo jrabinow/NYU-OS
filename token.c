@@ -12,13 +12,16 @@ Token *read_token(FILE *stream)
 	t->token = (char*) xmalloc(mem_size);
 
 	/* swallow whitespace */
-	while((c = fgetc(stream)) == ' ' || c == '\t' || c == '\n')
+	while(isspace(c = fgetc(stream)))
 		switch(c) {
 			case ' ':
 			case '\t':
+			case '\r':
 				lineoffset++;
 				break;
+			case '\f':
 			case '\n':
+			case '\v':
 				if((c = fgetc(stream)) != EOF) {
 					linenum++;
 					lineoffset = 1;
@@ -41,7 +44,7 @@ Token *read_token(FILE *stream)
 		t->token[i++] = c;
 		if(i == mem_size)
 			t->token = (char*) xrealloc(t->token, mem_size <<= 1);
-	} while((c = fgetc(stream)) != EOF && c != ' ' && c != '\t' && c != '\n');
+	} while((c = fgetc(stream)) != EOF && ! isspace(c));
 
 	ungetc(c, stream);
 	lineoffset += i;
