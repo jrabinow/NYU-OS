@@ -2,12 +2,14 @@
 
 int main(int argc, char **argv)
 {
-	int module_id = 0;
+	bool conserve_mem = true;	/* keep all modules in memory by default */
 	unsigned i;
+	int module_id = 0;
 	FILE *input = NULL;
+	Module *mod = NULL;
 	Array modules, symtable, unused_uselist;
 
-	if(argc != 2) {
+	if(argc < 2) {
 		usage(argv[0]);
 		return 0;
 	}
@@ -18,16 +20,26 @@ int main(int argc, char **argv)
 	linenum = lineoffset = 1;
 	global_offset = 0;
 
-	symtable.size = modules.size = 0;
-	symtable.mem_size = modules.mem_size = 64;
+	symtable.size = 0;
+	symtable.mem_size = 64;
 	symtable.symbol = (Symbol**) xmalloc(64 * sizeof(Symbol*));
-	modules.module = (Module**) xmalloc(64 * sizeof(Module*));
+
+	if( ! conserve_mem) {
+		modules.size = 0;
+		modules.mem_size = 64;
+		modules.module = (Module**) xmalloc(64 * sizeof(Module*));
+	}
 
 	/* ----- 1st PASS ----- */
-	while((modules.module[modules.size] = read_module(input, &module_id)) != NULL) {
-		if(modules.size == modules.mem_size)
-			modules.module = (Module**) xrealloc(modules.module, (modules.mem_size <<= 1) * sizeof(Module*));
-		addto_symbol_table(&symtable, modules.module[modules.size++]);
+	while((mod = read_module(input, &module_id, conserve_mem * USELIST)) != NULL) {
+		if( ! conserve_mem) {
+			modules.module[modules.size++] = mod;
+			if(modules.size == modules.mem_size)
+				modules.module = (Module**) xrealloc(modules.module, (modules.mem_size <<= 1) * sizeof(Module*));
+		}
+		addto_symbol_table(&symtable, mod);
+		if(conserve_mem)
+			delete_module(mod);
 	}
 
 	puts("Symbol Table");
@@ -48,23 +60,41 @@ int main(int argc, char **argv)
 	unused_uselist.mem_size = 8;
 	unused_uselist.uselist = (Uselist_Symbol*) xmalloc(8 * sizeof(Uselist_Symbol));
 
-	for(i = 0; i < modules.size; i++) {
-		print_instructions(modules.module[i], &symtable);
-		get_unused_uselist(modules.module[i], &unused_uselist);
+	if(conserve_mem) {
+		linenum = lineoffset = 1;
+		global_offset = 0;
+		module_id = 0;
+		input = xfopen(argv[1], "r");
+		while((mod = read_module(input, &module_id, 0)) != NULL) {
+			print_instructions(mod, &symtable);
+			get_unused_uselist(mod, &unused_uselist);
+			for(i = 0; i < mod->num_symbols; i++)
+				delete_symbol(mod->symbols[i]);
+			delete_module(mod);
+		}
+		fclose(input);
+	} else {
+		for(i = 0; i < modules.size; i++) {
+			print_instructions(modules.module[i], &symtable);
+			get_unused_uselist(modules.module[i], &unused_uselist);
+			delete_module(modules.module[i]);
+		}
+		free(modules.module);
 	}
 	putchar('\n');
 
 	print_unused_symbols(&symtable, &unused_uselist);
 
 	/* ----- CLEANUP ----- */
-	for(i = 0; i < modules.size; i++)
-		delete_module(modules.module[i]);
+	for(i = 0; i < symtable.size; i++)
+		delete_symbol(symtable.symbol[i]);
 	free(symtable.symbol);
-	free(modules.module);
 	free(unused_uselist.uselist);
 
 	return 0;
 }
+
+//void pass2_conserve_mem(FILE *input, pass2
 
 void print_instructions(Module *m, Array *symtable)
 {
@@ -158,8 +188,10 @@ void addto_symbol_table(Array *symtable, Module *m)
 			symtable->symbol[index] = m->symbols[i];
 			symtable->symbol[index]->offset = m->symbols[i]->local_offset + m->base_offset;
 			symtable->size++;
-		} else
+		} else {
 			symtable->symbol[index]->status = MULTIPLE_DEFS;
+			delete_symbol(m->symbols[i]);
+		}
 	}
 }
 
@@ -186,9 +218,11 @@ void print_unused_symbols(Array *symtable, Array *unused_uselist)
 			printf("Warning: Module %u: %s was defined but never used\n",
 				symtable->symbol[i]->module_id,	symtable->symbol[i]->sym);
 
-	for(i = 0; i < unused_uselist->size; i++)
+	for(i = 0; i < unused_uselist->size; i++) {
 		printf("Warning: Module %u: %s appeared in the uselist but was not actually used\n",
-				unused_uselist->uselist[i].module_id, unused_uselist->uselist[i].sym);
+			unused_uselist->uselist[i].module_id, unused_uselist->uselist[i].sym);
+		free(unused_uselist->uselist[i].sym);
+	}
 }
 
 bool symbol_index(Array *symtable, char *symtoken, ssize_t *index)
