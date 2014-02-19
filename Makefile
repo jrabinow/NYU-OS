@@ -1,4 +1,8 @@
-CFLAGS=-Wall -Wextra -Ofast --short-enums
+CC=gcc
+CFLAGS=-Wall -Wextra -Ofast
+ifeq ($(CC), gcc)
+	CFLAGS += --short-enums
+endif
 LDFLAGS=-s
 
 linker: utils.o token.o symbol.o instruction.o module.o
@@ -15,8 +19,16 @@ show: linker
 vgshow: linker
 	./tester.sh -sv
 
+compress: linker
+	test -f linker~ || gzexe linker
+
+decompress:
+	test -f linker~ && gzexe -d linker~ linker || make
+
+.PHONY: clean distclean
+
 clean:
-	rm -f *.o
+	rm -f *.o linker~
 
 distclean: clean
 	rm -f linker
