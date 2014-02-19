@@ -49,11 +49,11 @@ function main()
 		do
 			echo "---------- TEST $suffix ----------"
 			if $show_all || (! $show_all && [ $(contains ${suppress_errors[@]} $suffix) != 1 ]); then
-				./"${binary}" "${input}" >$tmpfile
+				./"${binary}" -c "${input}" >$tmpfile
 				diff -b -B -E $tmpfile ${testdir}/out-$suffix
 			fi
 			if ($using_valgrind && $show_all) || ($using_valgrind && ! $show_all && [ $(contains ${suppress_leaks[@]} $suffix) != 1 ]); then
-				valgrind ./"${binary}" "${input}" 2>$tmpfile >/dev/null
+				valgrind ./"${binary}" -c "${input}" 2>$tmpfile >/dev/null
 				grep -A5 'LEAK SUMMARY' $tmpfile|grep -v '0 bytes in 0 blocks'|cut -d' ' -f2-
 				tail -1 $tmpfile|grep -v '0 errors from 0 contexts'|cut -d' ' -f2-
 			fi

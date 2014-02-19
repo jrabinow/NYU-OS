@@ -2,23 +2,42 @@
 
 int main(int argc, char **argv)
 {
-	bool conserve_mem = true;	/* keep all modules in memory by default */
+	bool conserve_mem = false;	/* keep all modules in memory by default */
 	unsigned i;
-	int module_id = 0;
+	int j, opt, module_id = 0;
 	FILE *input = NULL;
 	Module *mod = NULL;
 	Array modules, symtable, unused_uselist;
 
 	if(argc < 2) {
 		usage(argv[0]);
-		return 0;
+		exit(EXIT_FAILURE);
+	}
+
+	while((opt = getopt(argc, argv, "cfh")) != -1) {
+		switch(opt) {
+			case 'c':
+				conserve_mem = true;
+				break;
+			case 'f':	/* default */
+				conserve_mem = false;
+				break;
+			case 'h':
+				usage(argv[0]);
+				return 0;
+			default:
+				usage(argv[0]);
+				exit(EXIT_FAILURE);
+		}
+	}
+
+	if(argc - optind == 0) {	/* if all parameters are options */
+		usage(argv[0]);
+		exit(EXIT_FAILURE);
 	}
 
 	/* ----- INIT ----- */
-	input = xfopen(argv[1], "r");
 
-	linenum = lineoffset = 1;
-	global_offset = 0;
 
 	symtable.size = 0;
 	symtable.mem_size = 64;
@@ -28,23 +47,35 @@ int main(int argc, char **argv)
 		modules.size = 0;
 		modules.mem_size = 64;
 		modules.module = (Module**) xmalloc(64 * sizeof(Module*));
-	}
+	} else
+		modules.module = NULL;
 
 	/* ----- 1st PASS ----- */
-	while((mod = read_module(input, &module_id, conserve_mem * USELIST)) != NULL) {
-		if( ! conserve_mem) {
-			modules.module[modules.size++] = mod;
-			if(modules.size == modules.mem_size)
-				modules.module = (Module**) xrealloc(modules.module, (modules.mem_size <<= 1) * sizeof(Module*));
+	global_offset = 0;
+	for(j = optind; j < argc; j++) {
+		linenum = lineoffset = 1;
+		current_workfile = argv[j];
+		input = xfopen(argv[j], "r");
+
+		while((mod = read_module(input, &module_id, conserve_mem * USELIST)) != NULL) {
+			if( ! conserve_mem) {
+				modules.module[modules.size++] = mod;
+
+				if(modules.size == modules.mem_size)
+					modules.module = (Module**) xrealloc(modules.module, (modules.mem_size <<= 1) * sizeof(Module*));
+			}
+			addto_symbol_table(&symtable, mod);
+
+			if(conserve_mem)
+				delete_module(mod);
 		}
-		addto_symbol_table(&symtable, mod);
-		if(conserve_mem)
-			delete_module(mod);
+		fclose(input);
 	}
 
 	puts("Symbol Table");
 	for(i = 0; i < symtable.size; i++) {
 		printf("%s=%lu", symtable.symbol[i]->sym, (unsigned long) symtable.symbol[i]->offset);
+
 		if(symtable.symbol[i]->status == MULTIPLE_DEFS)
 			puts(" Error: This variable is multiple times defined; first value used");
 		else /* symtable.symbol[i]->status == SINGLE_DEF */
@@ -52,7 +83,6 @@ int main(int argc, char **argv)
 		symtable.symbol[i]->status = UNUSED;
 	}
 	putchar('\n');
-	fclose(input);
 
 	/* ----- 2nd PASS ----- */
 	puts("Memory Map");
@@ -61,18 +91,21 @@ int main(int argc, char **argv)
 	unused_uselist.uselist = (Uselist_Symbol*) xmalloc(8 * sizeof(Uselist_Symbol));
 
 	if(conserve_mem) {
-		linenum = lineoffset = 1;
 		global_offset = 0;
 		module_id = 0;
-		input = xfopen(argv[1], "r");
-		while((mod = read_module(input, &module_id, 0)) != NULL) {
-			print_instructions(mod, &symtable);
-			get_unused_uselist(mod, &unused_uselist);
-			for(i = 0; i < mod->num_symbols; i++)
-				delete_symbol(mod->symbols[i]);
-			delete_module(mod);
+
+		for(j = optind; j < argc; j++) {
+			linenum = lineoffset = 1;
+			current_workfile = argv[j];
+			input = xfopen(argv[j], "r");
+
+			while((mod = read_module(input, &module_id, SYMBOLS)) != NULL) {
+				print_instructions(mod, &symtable);
+				get_unused_uselist(mod, &unused_uselist);
+				delete_module(mod);
+			}
+			fclose(input);
 		}
-		fclose(input);
 	} else {
 		for(i = 0; i < modules.size; i++) {
 			print_instructions(modules.module[i], &symtable);
@@ -94,7 +127,7 @@ int main(int argc, char **argv)
 	return 0;
 }
 
-//void pass2_conserve_mem(FILE *input, pass2
+/*void pass2_conserve_mem(FILE *input, pass2 */
 
 void print_instructions(Module *m, Array *symtable)
 {
@@ -103,6 +136,7 @@ void print_instructions(Module *m, Array *symtable)
 
 	for(i = 0; i < m->module_size; i++) {
 		instr = m->instructions[i];
+
 		switch(instr->addr) {
 			case I:
 				print_immediate(m->base_offset + i, instr->instruction);
@@ -172,7 +206,7 @@ void print_external(int addr, int val, Module *m, Array *symtable)
 void addto_symbol_table(Array *symtable, Module *m)
 {
 	size_t i;
-	ssize_t index = 0;
+	ssize_t j, index = 0;
 
 	while(symtable->size + m->num_symbols > symtable->mem_size)
 		symtable->symbol = xrealloc(symtable->symbol, (symtable->mem_size <<= 1) * sizeof(Symbol));
@@ -184,7 +218,10 @@ void addto_symbol_table(Array *symtable, Module *m)
 						m->symbols[i]->sym, (unsigned long) m->symbols[i]->local_offset, (unsigned long) (m->module_size - 1));
 				m->symbols[i]->local_offset = 0;
 			}
-			memmove(&symtable->symbol[index], &symtable->symbol[index + 1], (symtable->size - index) * sizeof(Symbol*));
+		/*	For some unfathomable reason, memmove produces a segfault when inserting a symbol into index[0] of symtable->symbol array 
+		 *	memmove(&symtable->symbol[index], &symtable->symbol[index + 1], (symtable->size - index) * sizeof(Symbol*)); */
+			for(j = symtable->size; j > index; j--)
+				symtable->symbol[j] = symtable->symbol[j-1];
 			symtable->symbol[index] = m->symbols[i];
 			symtable->symbol[index]->offset = m->symbols[i]->local_offset + m->base_offset;
 			symtable->size++;
@@ -216,11 +253,11 @@ void print_unused_symbols(Array *symtable, Array *unused_uselist)
 	for(i = 0; i < symtable->size; i++)
 		if(symtable->symbol[i]->status == UNUSED)
 			printf("Warning: Module %u: %s was defined but never used\n",
-				symtable->symbol[i]->module_id,	symtable->symbol[i]->sym);
+					symtable->symbol[i]->module_id,	symtable->symbol[i]->sym);
 
 	for(i = 0; i < unused_uselist->size; i++) {
 		printf("Warning: Module %u: %s appeared in the uselist but was not actually used\n",
-			unused_uselist->uselist[i].module_id, unused_uselist->uselist[i].sym);
+				unused_uselist->uselist[i].module_id, unused_uselist->uselist[i].sym);
 		free(unused_uselist->uselist[i].sym);
 	}
 }
@@ -246,6 +283,8 @@ bool symbol_index(Array *symtable, char *symtoken, ssize_t *index)
 			*index -= 1;
 		else
 			*index += 1;
+		if(*index < 0)
+			*index = 0;
 	}
 
 	return false;

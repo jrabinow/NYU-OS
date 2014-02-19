@@ -5,6 +5,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 #include <errno.h>
 #include "utils.h"
 
@@ -13,6 +14,7 @@
 #define MAX_DEFLIST_SIZE	16
 
 int linenum, lineoffset, global_offset;
+const char *current_workfile;
 
 #include "token.h"
 #include "symbol.h"
@@ -20,6 +22,7 @@ int linenum, lineoffset, global_offset;
 #include "module.h"
 
 typedef struct {
+	__extension__
 	union {
 		Symbol **symbol;
 		Module **module;
