@@ -1,7 +1,6 @@
 #ifndef UTILS
 #define UTILS
 
-/* generic utils, useful for any program */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -41,5 +40,7 @@ typedef enum {
 } Error_Codes;
 
 void __parseerror(int errcode, int linenum, int lineoffset);
+
+extern const char *current_workfile;
 
 #endif

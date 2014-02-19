@@ -1,5 +1,8 @@
 Compile:
 $ make
 
-Run:
-$ ./linker path/to/input/file
+Usage: 
+$ ./linker [OPTIONS] FILE1 [FILE2 [...]]
+Options:	-c	Conserve memory by reading input files twice
+		-f	Enable faster processing by keeping modules in memory (default)
+		-h	Print this help message

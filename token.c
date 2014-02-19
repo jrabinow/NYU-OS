@@ -1,9 +1,8 @@
 #include "token.h"
 
 /* read token into allocated buffer. No limit on token size
- * Bizarre code behaviour for EOF: getchar() will always read a newline character
- * right before newline. A lot of code here is just to make sure lineoffset and linenum
- * are updated properly anyways */
+ * A lot of code here is just to make sure lineoffset and linenum
+ * are updated properly */
 Token *read_token(FILE *stream)
 {
 	int c, i = 0, mem_size = 16;
@@ -38,8 +37,6 @@ Token *read_token(FILE *stream)
 		return t;
 	}
 
-	t->linenum = linenum;
-	t->lineoffset = lineoffset;
 	do {
 		t->token[i++] = c;
 		if(i == mem_size)

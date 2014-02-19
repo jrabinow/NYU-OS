@@ -2,7 +2,10 @@
 
 void usage(char *progname)
 {
-	fprintf(stderr, "Usage: %s path/to/input-file\n", progname);
+	fprintf(stderr, "Usage: %s [OPTIONS] FILE1 [FILE2 [...]]\n"
+			"Options:	-c	Conserve memory by reading input files twice\n"
+			"		-f	Enable faster processing by keeping modules in memory (default)\n"
+			"		-h	Print this help message\n", progname);
 }
 
 void *xmalloc(size_t size)
@@ -61,5 +64,6 @@ void __parseerror(int errcode, int l_num, int l_offset)
 		"TO_MANY_INSTR",
 	};
 	printf("Parse Error line %d offset %d: %s\n", l_num, l_offset, errstr[errcode]);
+	/*printf("Parse Error in %s line %d offset %d: %s\n", current_workfile, l_num, l_offset, errstr[errcode]); */
 }
 

@@ -16,7 +16,7 @@ typedef struct {
 typedef struct {
 	char *sym;
 	Status status;
-	int module_id;
+	short module_id;
 } Uselist_Symbol;
 
 Symbol *read_symbol(FILE *stream);
