@@ -206,7 +206,7 @@ void print_external(int addr, int val, Module *m, Array *symtable)
 void addto_symbol_table(Array *symtable, Module *m)
 {
 	size_t i;
-	ssize_t j, index = 0;
+	ssize_t index = 0;
 
 	while(symtable->size + m->num_symbols > symtable->mem_size)
 		symtable->symbol = xrealloc(symtable->symbol, (symtable->mem_size <<= 1) * sizeof(Symbol));
@@ -218,10 +218,7 @@ void addto_symbol_table(Array *symtable, Module *m)
 						m->symbols[i]->sym, (unsigned long) m->symbols[i]->local_offset, (unsigned long) (m->module_size - 1));
 				m->symbols[i]->local_offset = 0;
 			}
-		/*	For some unfathomable reason, memmove produces a segfault when inserting a symbol into index[0] of symtable->symbol array 
-		 *	memmove(&symtable->symbol[index], &symtable->symbol[index + 1], (symtable->size - index) * sizeof(Symbol*)); */
-			for(j = symtable->size; j > index; j--)
-				symtable->symbol[j] = symtable->symbol[j-1];
+		 	memmove(&symtable->symbol[index + 1], &symtable->symbol[index], (symtable->size - index) * sizeof(Symbol*));
 			symtable->symbol[index] = m->symbols[i];
 			symtable->symbol[index]->offset = m->symbols[i]->local_offset + m->base_offset;
 			symtable->size++;
