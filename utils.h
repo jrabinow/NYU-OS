@@ -9,7 +9,7 @@
 # define C89
 # if defined(__STDC_VERSION__)
 #  define C90
-#  if (__STDC_VERSION__ >= 199901L)
+#  if (__STDC_VERSION__ >= 199901L) && ! defined C99
 #   define C99
 #  endif
 # endif
