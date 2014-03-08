@@ -2,7 +2,7 @@
 
 void usage(char *progname)
 {
-	fprintf(stderr, "Usage: %s [OPTIONS] FILE1 [FILE2 [...]]\n"
+	fprintf(stderr, "Usage: %s [OPTION]... FILE1 ...\n"
 			"Options:	-c	Conserve memory by reading input files twice\n"
 			"		-f	Enable faster processing by keeping modules in memory (default)\n"
 			"		-h	Print this help message\n", progname);
