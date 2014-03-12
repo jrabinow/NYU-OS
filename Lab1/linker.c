@@ -177,7 +177,8 @@ void print_relative(int addr, int val, Module *m)
 	if(val >= 10000)
 		printf("%03d: 9999 Error: Illegal opcode; treated as 9999", addr);
 	else if(val % 1000 > m->module_size)
-		printf("%03d: %04lu Error: Relative address exceeds module size; zero used", addr, (unsigned long) (opcode(val) + m->base_offset));
+		printf("%03d: %04lu Error: Relative address exceeds module size; zero used", addr,
+				(unsigned long) (opcode(val) + m->base_offset));
 	else
 		printf("%03d: %04lu", addr, (unsigned long) (val + m->base_offset));
 }
@@ -215,10 +216,12 @@ void addto_symbol_table(Array *symtable, Module *m)
 		if( ! symbol_index(symtable, m->symbols[i]->sym, &index)) {
 			if(m->symbols[i]->local_offset >= m->module_size) {
 				printf("Warning: Module %u: %s to big %lu (max=%lu) assume zero relative\n", m->module_id,
-						m->symbols[i]->sym, (unsigned long) m->symbols[i]->local_offset, (unsigned long) (m->module_size - 1));
+						m->symbols[i]->sym, (unsigned long) m->symbols[i]->local_offset,
+						(unsigned long) (m->module_size - 1));
 				m->symbols[i]->local_offset = 0;
 			}
-		 	memmove(&symtable->symbol[index + 1], &symtable->symbol[index], (symtable->size - index) * sizeof(Symbol*));
+		 	memmove(&symtable->symbol[index + 1], &symtable->symbol[index],
+					(symtable->size - index) * sizeof(Symbol*));
 			symtable->symbol[index] = m->symbols[i];
 			symtable->symbol[index]->offset = m->symbols[i]->local_offset + m->base_offset;
 			symtable->size++;
