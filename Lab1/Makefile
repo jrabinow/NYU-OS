@@ -7,17 +7,25 @@ LDFLAGS=-s
 
 linker: utils.o token.o symbol.o instruction.o module.o
 
-test: linker
+depend:
+	gcc -MM *.c > .depend
+
+-include .depend
+
+check: linker
 	./tester.sh
 
-vgtest: linker
-	./tester.sh -v
+test: linker
+	./tester.sh -oi
+
+memtest: linker
+	./tester.sh -mi
 
 show: linker
-	./tester.sh -s
+	./tester.sh -o
 
-vgshow: linker
-	./tester.sh -sv
+memshow: linker
+	./tester.sh -m
 
 compress: linker
 	test -f linker~ || gzexe linker
