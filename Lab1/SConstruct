@@ -1,0 +1,3 @@
+env = Environment(CCFLAGS=['-Wall', '-Wextra', '-Wpedantic', '-Ofast', '-DC99'], LDFLAGS='-s')
+objlist = env.Object(Glob('*.c'))
+env.Program('linker', objlist)

@@ -128,7 +128,7 @@ EOF
 	if $benchmark; then
 		let total=0
 		for((i = 0; i < $count; i++)) {
-			output=$((time run_benchmark) |& grep real)
+			output=$( (time run_benchmark) |& grep real)
 			parsestr=${output##real}
 			min=${parsestr%%m*}
 			sec=${parsestr##*m}
