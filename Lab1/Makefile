@@ -1,9 +1,11 @@
 CC=gcc
-CFLAGS=-Wall -Wextra -Wpedantic -Ofast -DC99
+CFLAGS=-Wall -Wextra -Wpedantic -DC99 -Ofast
 ifeq ($(CC), gcc)
 	CFLAGS += --short-enums
 endif
 LDFLAGS=-s
+
+all: depend linker
 
 linker: utils.o token.o symbol.o instruction.o module.o
 
@@ -33,7 +35,7 @@ compress: linker
 decompress:
 	test -f linker~ && gzexe -d linker~ linker || make
 
-.PHONY: clean distclean
+.PHONY: clean distclean depend
 
 clean:
 	rm -f *.o linker~
