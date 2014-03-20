@@ -50,13 +50,16 @@ void *xrealloc(void *ptr, size_t size)
 
 char *xstrdup(const char *str)
 {
-	char *newStr = strdup(str);
+	char *new_str = NULL;
+	int len = strlen(str);
 
-	if(newStr == NULL) {
+	/* strdup is not ANSI C. We do its equivalent in this function */
+	new_str = malloc(len + 1);
+	if(new_str == NULL) {
 		perror("Error allocating memory ");
 		exit(EXIT_FAILURE);
 	} else
-		return newStr;
+		return memcpy(new_str, str, len + 1);
 }
 
 FILE *xfopen(const char *path, const char *mode)

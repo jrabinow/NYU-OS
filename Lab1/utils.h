@@ -34,6 +34,9 @@
 # endif
 #endif
 
+/* https://lkml.org/lkml/2013/8/31/138
+ * No problems so far, but will probably take Torvalds advice and stop
+ * using this */
 #ifdef C99
 # include <stdbool.h>
 #else
