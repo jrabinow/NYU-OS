@@ -4,14 +4,16 @@ ifeq ($(CC), gcc)
 	CFLAGS += --short-enums
 endif
 
+BINARY=scheduler
+
 all: CFLAGS += -Ofast
 all: LDFLAGS +=-s
-all: depend scheduler
+all: depend $(BINARY)
 
 debug: CFLAGS += -g -DDEBUG
-debug: depend scheduler
+debug: depend $(BINARY)
 
-scheduler: main.o utils.o random.o object.o FIFO.o linkedlist.o\
+$(BINARY): main.o utils.o random.o object.o FIFO.o linkedlist.o\
 	stack.o heap.o process.o FCFS.o LCFS.o SJF.o roundrobin.o
 
 depend:
@@ -19,28 +21,28 @@ depend:
 
 -include .depend
 
-test: scheduler
+test: $(BINARY)
 	./tester.sh
 
-vgtest: scheduler
+vgtest: $(BINARY)
 	./tester.sh -v
 
-show: scheduler
+show: $(BINARY)
 	./tester.sh -s
 
-vgshow: scheduler
+vgshow: $(BINARY)
 	./tester.sh -sv
 
-compress: scheduler
-	test -f scheduler~ || gzexe scheduler
+compress: $(BINARY)
+	gzexe $(BINARY) && $(RM) $(BINARY)~
 
 decompress:
-	test -f scheduler~ && gzexe -d scheduler~ && $(RM) scheduler~ || $(MAKE)
+	test -f $(BINARY) && gzexe -d $(BINARY) && $(RM) $(BINARY)~ || $(MAKE)
 
 .PHONY: clean distclean depend
 
 clean:
-	rm -f *.o
+	$(RM) *.o
 
 distclean: clean
-	rm -f scheduler scheduler~
+	$(RM) $(BINARY)
