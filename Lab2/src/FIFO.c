@@ -1,3 +1,22 @@
+/*
+ *  Copyright (C) 2014 Julien Rabinow <jnr305@nyu.edu>
+ *
+ *  This file is part of Lab2-Scheduler.
+ *
+ *  Lab2-Scheduler is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Lab2-Scheduler is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Lab2-Scheduler. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include <FIFO.h>
 
 typedef struct Elem {
@@ -8,6 +27,7 @@ typedef struct Elem {
 static FIFO new(const Builder);
 static void delete(FIFO);
 static FIFO clone(FIFO);
+static unsigned size(const FIFO);
 static void put(FIFO, Object);
 static Object get(FIFO);
 static Object peek(FIFO);
@@ -20,6 +40,7 @@ static struct FIFO_LT lt = {
 	&delete,
 	&clone,
 	NULL,
+	&size,
 	&put,
 	&get,
 	&peek,
@@ -41,12 +62,14 @@ static FIFO new(const Builder bld)
 		bld->lt->lt_initialized = true;
 	f->in = NULL;
 	f->out = NULL;
+	f->size = 0;
 	return f;
 }
 
 static void delete(FIFO this)
 {
 	Elem *tmp;
+
 	while((tmp = this->out) != NULL) {
 		this->out = this->out->next;
 		if(tmp->obj != NULL)
@@ -63,7 +86,8 @@ static FIFO clone(FIFO this)
 
 	if(iterator != NULL) {
 		f->out = tmp = (Elem*) xmalloc(sizeof(Elem));
-		tmp->obj = iterator->obj != NULL ? iterator->obj->lt->clone(iterator->obj) : NULL;
+		tmp->obj = iterator->obj != NULL ?
+			iterator->obj->lt->clone(iterator->obj) : NULL;
 
 		while((iterator = iterator->next) != NULL) {
 			tmp->next = (Elem*) xmalloc(sizeof(Elem));
@@ -77,6 +101,11 @@ static FIFO clone(FIFO this)
 	return f;
 }
 
+static unsigned size(const FIFO this)
+{
+	return this->size;
+}
+
 static void put(FIFO this, Object obj)
 {
 	Elem *e = (Elem*) xmalloc(sizeof(Elem));
@@ -87,6 +116,7 @@ static void put(FIFO this, Object obj)
 		this->in = this->in->next = e;
 	else
 		this->in = this->out = e;
+	this->size++;
 }
 
 static Object get(FIFO this)
@@ -98,6 +128,7 @@ static Object get(FIFO this)
 		ret = tmp->obj;
 		this->out = tmp->next;
 		free(tmp);
+		this->size--;
 	} else
 		this->in = NULL;
 	return ret;

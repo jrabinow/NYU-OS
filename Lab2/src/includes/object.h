@@ -1,3 +1,22 @@
+/*
+ *  Copyright (C) 2014 Julien Rabinow <jnr305@nyu.edu>
+ *
+ *  This file is part of Lab2-Scheduler.
+ *
+ *  Lab2-Scheduler is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Lab2-Scheduler is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Lab2-Scheduler. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #ifndef OBJECT_H
 #define OBJECT_H
 
@@ -11,9 +30,10 @@ struct Builder {
 };
 
 /* super: object inherits from object type 'super'
- * lt: Lookup table, or struct of pointers to functions. See below for more info.
- * obj_size: amount of memory to allocate for an object. Can be determined with 'sizeof'
- * lt_initialized: do we need to 'underride' methods for this builder?
+ * lt: Lookup table, or struct of pointers to functions. See below for more
+ * info.
+ * obj_size: amount of memory to allocate for an object. Can be determined with
+ * 'sizeof' lt_initialized: do we need to 'underride' methods for this builder?
  * You know what override means, now guess what underride does :)
  * name: char[] description of the object type */
 
@@ -34,7 +54,7 @@ struct Lookup_Table {
 	void *(*new)(const Builder, ...);
 	void (*delete)(void*);
 	void *(*clone)(const void*);
-	void (*print)(const void*);
+	char *(*to_string)(const void*);
 };
 
 typedef struct Lookup_Table* Lookup_Table;
@@ -49,6 +69,7 @@ bool instance_of(const Object obj, const Builder bld);
 
 extern const struct Builder __Object__;
 
-#define instance_of(obj, bld)	instance_of((const Object) obj, (const Builder) &__##bld##__)
+#define instance_of(obj, bld)	instance_of((const Object) obj, (const Builder)\
+		&__##bld##__)
 
 #endif

@@ -35,7 +35,7 @@ compress: scheduler
 	test -f scheduler~ || gzexe scheduler
 
 decompress:
-	test -f scheduler~ && gzexe -d scheduler~ scheduler || $(MAKE)
+	test -f scheduler~ && gzexe -d scheduler~ && $(RM) scheduler~ || $(MAKE)
 
 .PHONY: clean distclean depend
 
@@ -43,4 +43,4 @@ clean:
 	rm -f *.o
 
 distclean: clean
-	rm -f scheduler
+	rm -f scheduler scheduler~
