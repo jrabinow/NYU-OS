@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-Wall -Wextra -Wpedantic -DC99 -Ofast
+CFLAGS=-Wall -Wextra -Wpedantic -Ofast -ansi -DC99
 ifeq ($(CC), gcc)
 	CFLAGS += --short-enums
 endif

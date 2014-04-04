@@ -1,3 +1,22 @@
+/*
+ *  Copyright (C) 2014 Julien Rabinow <jnr305@nyu.edu>
+ *
+ *  This file is part of Lab2-Scheduler.
+ *
+ *  Lab2-Scheduler is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Lab2-Scheduler is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Lab2-Scheduler. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include <stack.h>
 
 typedef struct Elem {
@@ -8,6 +27,7 @@ typedef struct Elem {
 static Stack new(const Builder);
 static void delete(Stack);
 static Stack clone(Stack);
+static unsigned size(const Stack);
 static void push(Stack, Object);
 static Object pop(Stack);
 static Object peek(Stack);
@@ -19,6 +39,7 @@ static struct Stack_LT lt = {
 	&delete,
 	&clone,
 	NULL,
+	&size,
 	&push,
 	&pop,
 	&peek
@@ -38,6 +59,7 @@ static Stack new(const Builder bld)
 	if(bld == &__Stack__)
 		bld->lt->lt_initialized = true;
 	s->sp = NULL;
+	s->size = 0;
 	return s;
 }
 
@@ -60,7 +82,8 @@ static Stack clone(Stack this)
 
 	if(iterator != NULL) {
 		s->sp = tmp = (Elem*) xmalloc(sizeof(Elem));
-		tmp->obj = iterator->obj != NULL ? iterator->obj->lt->clone(iterator->obj) : NULL;
+		tmp->obj = iterator->obj != NULL ?
+			iterator->obj->lt->clone(iterator->obj) : NULL;
 
 		while((iterator = iterator->next) != NULL) {
 			tmp->next = (Elem*) xmalloc(sizeof(Elem));
@@ -73,6 +96,11 @@ static Stack clone(Stack this)
 	return s;
 }
 
+static unsigned size(const Stack this)
+{
+	return this->size;
+}
+
 static void push(Stack this, Object obj)
 {
 	Elem *e = (Elem*) xmalloc(sizeof(Elem));
@@ -80,6 +108,7 @@ static void push(Stack this, Object obj)
 	e->obj = obj;
 	e->next = this->sp;
 	this->sp = e;
+	this->size++;
 }
 
 static Object pop(Stack this)
@@ -91,6 +120,7 @@ static Object pop(Stack this)
 		ret = tmp->obj;
 		this->sp = tmp->next;
 		free(tmp);
+		this->size--;
 	}
 	return ret;
 }

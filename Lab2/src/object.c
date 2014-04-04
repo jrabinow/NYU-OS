@@ -1,8 +1,27 @@
+/*
+ *  Copyright (C) 2014 Julien Rabinow <jnr305@nyu.edu>
+ *
+ *  This file is part of Lab2-Scheduler.
+ *
+ *  Lab2-Scheduler is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Lab2-Scheduler is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Lab2-Scheduler. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include <object.h>
 
 static void *new(const Builder bld, ...);
 static void *clone(const void *obj);
-static void print(const void *obj);
+static char *to_string(const void *obj);
 
 struct Lookup_Table lt = {
 	NULL,					/* pointer to builder. We define the Object builder
@@ -16,7 +35,7 @@ struct Lookup_Table lt = {
 						 * memory and initializes some values => we can just call free
 						 * on the object and it will be destroyed without any memory leak */
 	&clone,
-	&print
+	&to_string
 };
 
 const struct Builder __Object__ = {
@@ -37,13 +56,13 @@ static void *new(const Builder bld, ...)
 	if( ! bld->lt->lt_initialized) {
 		o->lt->bld = bld;
 		if(bld->lt->new == NULL)		/* functions are not automatically inherited between types, we have to manually set pointer values */
-			bld->lt->new = &new; 		/* However we must make sure there is no other function pointer before overwriting */
+			bld->lt->new = &new;		/* However we must make sure there is no other function pointer before overwriting */
 		if(bld->lt->delete == NULL)		/* pointers in the lookup table */
 			bld->lt->delete = &free;
 		if(bld->lt->clone == NULL)
 			bld->lt->clone = (void *(*)(const void*)) &clone;
-		if(bld->lt->print == NULL)
-			bld->lt->print = (void (*)(const void*)) &print;
+		if(bld->lt->to_string == NULL)
+			bld->lt->to_string = (char *(*)(const void*)) &to_string;
 	}
 	return o;
 }
@@ -56,9 +75,15 @@ static void *clone(const void *obj)
 	return new_obj;
 }
 
-static void print(const void *obj)
+static char *to_string(const void *obj)
 {
-	printf("%p\n", obj);
+	char *str = NULL;
+
+	if(asprintf(&str, "%p", obj) == -1) {
+		perror("Error allocating memory ");
+		exit(EXIT_FAILURE);
+	} else
+		return str;
 }
 
 #undef instance_of

@@ -34,6 +34,10 @@
 # endif
 #endif
 
+#ifdef __STRICT_ANSI__
+#include <sys/types.h>
+#endif
+
 /* https://lkml.org/lkml/2013/8/31/138
  * No problems so far, but will probably take Torvalds advice and stop
  * using this */
