@@ -47,7 +47,7 @@
  typedef enum { false = 0, true = 1 } bool;
 #endif
 
-void usage(char *progname);
+void usage(char *progname, FILE *outstream);
 
 FILE *xfopen(const char *path, const char *mode);
 void *xrealloc(void *ptr, size_t size);

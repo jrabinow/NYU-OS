@@ -26,7 +26,7 @@ void usage(char *progname, FILE *outstream)
 			"			-s=ARG	scheduler mode\n"
 			"			ARG has the following specification: [ FLS | R<num> ]\n"
 			"			The scheduler mode is FCFS by default\n"
-			"			-v	verbose mode\n\n"	, stderr);
+			"			-v	verbose mode\n\n"	, outstream);
 
 }
 

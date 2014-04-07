@@ -30,7 +30,7 @@ struct Scheduler {
 	struct Scheduler_LT *lt;
 	time_t last_event;
 	double CPU_use, IO_use, turnaround, cpu_waiting, throughput;
-	FIFO input_queue, IO_blocking;
+	FIFO event_queue, IO_queue, input_queue;
 };
 
 typedef struct Scheduler* Scheduler;
@@ -48,6 +48,7 @@ struct Scheduler_LT {
 	unsigned (*get_readyqueue_size)(Scheduler);
 	Process (*get_event)(Scheduler);
 	void (*put_event)(Scheduler, Process);
+	Process (*peek_readyq)(const Scheduler);
 	void (*run)(Scheduler, bool);
 	void (*print_info)(Scheduler);
 };
@@ -56,5 +57,9 @@ typedef struct Scheduler_LT* Scheduler_LT;
 
 extern const struct Builder __Scheduler__, __FCFS_Scheduler__,
        __LCFS_Scheduler__, __SJF_Scheduler__, __RR_Scheduler__;
+
+/* for getting quantum */
+#include <roundrobin.h>
+#include <limits.h>
 
 #endif

@@ -35,6 +35,7 @@ struct RR_Scheduler_LT {
 	unsigned (*get_readyqueue_size)(const Scheduler);
 	Process (*get_event)(Scheduler);
 	void (*put_event)(Scheduler, Process);
+	Process (*peek_readyq)(const Scheduler);
 	void (*run)(Scheduler, bool);
 	void (*print_info)(Scheduler);
 	/* --------- RR_SCHEDULER --------- */
@@ -48,7 +49,8 @@ struct RR_Scheduler {
 	RR_Scheduler_LT lt;
 	time_t last_event;
 	double CPU_use, IO_use, turnaround, cpu_waiting, throughput;
-	FIFO input_queue, IO_blocking, ready_queue;
+	FIFO event_queue, IO_queue, input_queue,
+	     ready_queue;
 	int quantum;
 };
 

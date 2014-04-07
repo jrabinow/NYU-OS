@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
 	fclose(input);
 	/* initialize random number generator */
 	init_random(argv[optind]);
-	
+
 	scheduler->run(scheduler, trace);
 
 	scheduler->delete(scheduler);

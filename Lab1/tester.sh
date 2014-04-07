@@ -1,5 +1,22 @@
 #!/bin/bash
 
+#  Copyright (C) 2014 Julien Rabinow <jnr305@nyu.edu>
+#
+#  This file is part of Lab1-Linker.
+#
+#  Lab1-Linker is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  Lab1-Linker is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with Lab1-Linker.  If not, see <http://www.gnu.org/licenses/>.
+
 function contains()
 {
 	local n=$#
@@ -17,14 +34,14 @@ function contains()
 function run_diff_test()
 {
 	# we pipe the directory listing through sort to ensure all tests are done in numerical order
-	for input in $(ls "${testdir}"/input-*|sort -nk2 -t'-')
+	for input in $(ls "${input_testdir}"/input-*|sort -nk2 -t'-')
 	do
-		for suffix in $(ls ${input}|cut -d- -f2)
+		for suffix in ${input##*-}
 		do
 			echo "---------- TEST $suffix ----------"
-			if $show_all || (! $show_all && [ $(contains ${suppress_diffs[@]} $suffix) != 1 ]); then
-				./"${binary}" ${opts} "${input}" >$tmpfile
-				diff -b -B -E $tmpfile ${testdir}/out-$suffix
+			if $show_all || (! $show_all && [ $(contains ${suppress_diffs[@]} "${suffix}") != 1 ]); then
+				./"${binary}" ${opts} "${input}" >"${tmpfile}"
+				diff -b -B -E "${tmpfile}" "${output_testdir}"/out-"${suffix}"
 			fi
 		done
 	done
@@ -33,15 +50,15 @@ function run_diff_test()
 function run_leak_test()
 {
 	# we pipe the directory listing through sort to ensure all tests are done in numerical order
-	for input in $(ls "${testdir}"/input-*|sort -nk2 -t'-')
+	for input in $(ls "${input_testdir}"/input-*|sort -nk2 -t'-')
 	do
-		for suffix in $(ls ${input}|cut -d- -f2)
+		for suffix in ${input##*-}
 		do
 			echo "---------- TEST $suffix ----------"
 			if $show_all || (! $show_all && [ $(contains ${suppress_leaks[@]} $suffix) != 1 ]); then
-				valgrind ./"${binary}" ${opts} "${input}" 2>$tmpfile >/dev/null
-				grep -A5 'LEAK SUMMARY' $tmpfile|grep -v '0 bytes in 0 blocks'|cut -d' ' -f2-
-				tail -1 $tmpfile|grep -v '0 errors from 0 contexts'|cut -d' ' -f2-
+				valgrind ./"${binary}" ${opts} "${input}" 2>"${tmpfile}" >/dev/null
+				grep -A5 'LEAK SUMMARY' "${tmpfile}"|grep -v '0 bytes in 0 blocks'|cut -d' ' -f2-
+				tail -1 "${tmpfile}"|grep -v '0 errors from 0 contexts'|cut -d' ' -f2-
 			fi
 		done
 	done
@@ -49,7 +66,7 @@ function run_leak_test()
 
 function run_benchmark()
 {
-	for input in ${testdir}/input-*
+	for input in "${input_testdir}"/input*
 	do
 		for suffix in $(ls ${input}|cut -d- -f2)
 		do
@@ -61,12 +78,14 @@ function run_benchmark()
 function main()
 {
 	local binary=linker				# binary file name
-	local opts=-c					# options to pass to binary program
-	local testdir=labsamples			# directory containing sample inputs and outputs
+	local opts=					# options to pass to binary program
+	local input_testdir=labsamples			# directory containing sample inputs
+	local output_testdir=labsamples			# directory containing reference outputs
 
 	local diff_test=false				# perform output comparison tests
 	local leak_test=false				# perform memory leak tests
 	local benchmark=false				# perform benchmark
+	local verbose=false				# increase verbosity
 	local count=1
 
 	local suppress_diffs=( 9 )			# don't show diff errors for tests in array
@@ -74,13 +93,16 @@ function main()
 	local show_all=true				# ignore suppress* arrays and print all errors
 	local tmpfile=$(mktemp)
 
-	while getopts "b:d:himot" opt; do
+	while getopts "b:d:e:himotv" opt; do
 		case ${opt} in
 			b)	# redefine binary
 				binary="${OPTARG}";
 				;;
-			d)	# redefine testdir
-				testdir="${OPTARG}"
+			d)	# redefine input_testdir
+				input_testdir="${OPTARG}"
+				;;
+			e)	# redefine output_testdir
+				output_testdir="${OPTARG}"
 				;;
 			i)	# ignore
 				show_all=false
@@ -88,12 +110,15 @@ function main()
 			h)	# help message
 				cat << EOF
 Usage: $0 [OPTS]...
-Options: -dARG: set directory containing test input-output values to ARG
+Options: -bARG: set binary name to ARG
+	-dARG: set directory containing test input files to ARG
+	-eARG: set directory containing test output files to ARG
 	-h: show this help dialog
 	-i: ignore tests included in suppress* arrays (hardcoded)
 	-m: run leak-check tests (do not run output comparison tests)
 	-o: run output comparison tests (do not run leak-check tests)
 	-t[ARG]: benchmark application. Optional argument specifies number of runs
+	-v: enable verbose mode for benchmarking
 EOF
 				exit 0
 				;;
@@ -105,10 +130,13 @@ EOF
 				;;
 			t)	# benchmarking
 				benchmark=true
-				if [ ! -z ${!OPTIND} ] && [[ "${!OPTIND#-t}" =~ ^[0-9]+$ ]]; then
-					let count="${!OPTIND#-t}"
+				if [ ! -z ${!OPTIND} ] && [[ "${!OPTIND#-*t}" =~ ^[0-9]+$ ]]; then
+					let count="${!OPTIND#-*t}"
 					let OPTIND++
 				fi
+				;;
+			v)	# verbosity
+				verbose=true
 				;;
 			?)
 				echo "Unknown option, exiting now" >&2
@@ -120,27 +148,19 @@ EOF
 		echo "Invalid program: '${binary}' does not exist or is not executable" >&2
 		exit 1
 	fi
-	if [ ! -d "${testdir}" ] || [ ! -r "${testdir}" ]; then
-		echo "Invalid testdir: '${testdir}' does not exist or is not searchable" >&2
+	if [ ! -d "${input_testdir}" ] || [ ! -r "${input_testdir}" ]; then
+		echo "Invalid input testdir: '${input_testdir}' does not exist or is not searchable" >&2
+		exit 1
+	fi
+	if [ ! -d "${output_testdir}" ] || [ ! -r "${output_testdir}" ]; then
+		echo "Invalid output testdir: '${output_testdir}' does not exist or is not searchable" >&2
 		exit 1
 	fi
 
-	if $benchmark; then
-		let total=0
-		for((i = 0; i < $count; i++)) {
-			output=$( (time run_benchmark) |& grep real)
-			parsestr=${output##real}
-			min=${parsestr%%m*}
-			sec=${parsestr##*m}
-			echo $min $sec
-		}
-		echo $total
-		exit 0
-	fi
-
-	if ! $diff_test && ! $leak_test; then
+	if ! $diff_test && ! $leak_test && ! $benchmark; then
 		diff_test=true
 		leak_test=true
+		benchmark=true
 	fi
 	if $diff_test; then
 		echo -e "\n\x1B[3mRunning diff tests...\x1B[0m\n"
@@ -154,6 +174,27 @@ EOF
 			echo -e "\n\x1B[3mRunning memory leak tests...\x1B[0m\n"
 			run_leak_test
 		fi
+	fi
+
+	if $benchmark; then
+		echo -e "\n\x1B[3mRunning benchmark...\x1B[0m\n"
+		let total=0
+		for((i = 0; i < $count; i++)) {
+			output=$((time run_benchmark) |& grep real)
+			min=$(echo $output|cut -b5-|cut -dm -f1)
+			sec=$(echo $output|cut -dm -f2|cut -d. -f1)
+			milli=$(echo ${output##*m*.0}|cut -ds -f1)
+			let total=total+min*60000+sec*1000+milli
+			if $verbose; then
+				echo ${min}m$sec.${milli}s
+			fi
+		}
+		let time_secs=total/1000
+		let time_milli=total%1000
+		let average=total/count
+		let average_secs=average/1000
+		let average_milli=average%1000
+		echo -e "\n$count executions\nTotal time:\t\t$time_secs.${time_milli}s\nAverage runtime:\t$average_secs.${average_milli}s"
 	fi
 
 	rm -f $tmpfile

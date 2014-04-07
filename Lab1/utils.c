@@ -19,12 +19,12 @@
 
 #include "utils.h"
 
-void usage(char *progname)
+void usage(char *progname, FILE *outstream)
 {
-	fprintf(stderr, "Usage: %s [OPTION]... FILE1 ...\n"
-			"Options:	-c	Conserve memory by reading input files twice\n"
+	fprintf(outstream, "Usage: %s [OPTION]... FILE1 ...\n", progname);
+	fputs(		"Options:	-c	Conserve memory by reading input files twice\n"
 			"		-f	Enable faster processing by keeping modules in memory (default)\n"
-			"		-h	Print this help message\n", progname);
+			"		-h	Print this help message\n", outstream);
 }
 
 void *xmalloc(size_t size)

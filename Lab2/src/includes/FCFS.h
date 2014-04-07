@@ -26,7 +26,8 @@ struct FCFS_Scheduler {
 	Scheduler_LT lt;
 	time_t last_event;
 	double CPU_use, IO_use, turnaround, cpu_waiting, throughput;
-	FIFO input_queue, IO_blocking, ready_queue;
+	FIFO event_queue, IO_queue,
+	     ready_queue;
 };
 
 typedef struct FCFS_Scheduler* FCFS_Scheduler;
