@@ -147,7 +147,12 @@ static void run(Scheduler this, bool trace)
 	while(fill_event_queue(this)) {
 		p = (Process) this->event_queue->lt->get(this->event_queue);
 		switch(p->state) {
-
+			case READY:
+				break;
+			case RUNNING:
+				break;
+			case BLOCKED:
+				break;
 			default:
 				fputs("ERROR: invalid state. Exiting now...\n", stderr);
 				exit(EXIT_FAILURE);
