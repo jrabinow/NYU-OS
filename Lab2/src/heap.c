@@ -78,7 +78,7 @@ static Heap clone(Heap this)
 {
 	unsigned i;
 	Heap h = __Heap__.super->lt->clone(this);
-	
+
 	/* find smallest power of 2 >= this->size. Compatible with 32-bit
 	 * integers */
 	i = this->size + (this->size == 0) - 1;

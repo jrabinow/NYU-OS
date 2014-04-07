@@ -25,7 +25,7 @@
 #include <unistd.h>
 #include <time.h>
 
-typedef enum { READY, RUNNING, BLOCKED, REAPED } State;
+typedef enum { READY, RUNNING, BLOCKED } State;
 
 struct Process {
 	struct Process_LT *lt;

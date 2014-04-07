@@ -25,6 +25,7 @@ static Scheduler clone(const Scheduler sched);
 static unsigned readyq_size(const Scheduler sched);
 static void put_event(Scheduler sched, Process proc);
 static Process get_event(Scheduler sched);
+static Process peek_readyq(Scheduler sched);
 
 static struct Scheduler_LT FCFS_lt = {
 	NULL,
@@ -37,6 +38,7 @@ static struct Scheduler_LT FCFS_lt = {
 	&readyq_size,
 	&get_event,
 	&put_event,
+	&peek_readyq,
 	NULL,
 	NULL
 };
@@ -99,3 +101,9 @@ static void put_event(Scheduler sched, Process proc)
 	this->ready_queue->lt->put(this->ready_queue, (Object) proc);
 }
 
+static Process peek_readyq(Scheduler sched)
+{
+	FCFS_Scheduler this = (FCFS_Scheduler) sched;
+
+	return (Process) this->ready_queue->lt->peek(this->ready_queue);
+}

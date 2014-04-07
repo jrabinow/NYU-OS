@@ -7,7 +7,7 @@ endif
 BINARY=scheduler
 
 all: CFLAGS += -Ofast
-all: LDFLAGS +=-s
+all: LDFLAGS += -s
 all: depend $(BINARY)
 
 debug: CFLAGS += -g -DDEBUG
@@ -21,17 +21,20 @@ depend:
 
 -include .depend
 
-test: $(BINARY)
+check: $(BINARY)
 	./tester.sh
 
-vgtest: $(BINARY)
-	./tester.sh -v
+test: $(BINARY)
+	./tester.sh -oi
+
+memtest: $(BINARY)
+	./tester.sh -mi
 
 show: $(BINARY)
-	./tester.sh -s
+	./tester.sh -o
 
-vgshow: $(BINARY)
-	./tester.sh -sv
+memshow: $(BINARY)
+	./tester.sh -m
 
 compress: $(BINARY)
 	gzexe $(BINARY) && $(RM) $(BINARY)~

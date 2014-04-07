@@ -117,7 +117,7 @@ static Object get(LinkedList this)
 {
 	Elem *tmp = this->head;
 	Object ret = NULL;
-	
+
 	if(tmp != NULL) {
 		ret = tmp->obj;
 		this->head = tmp->next;

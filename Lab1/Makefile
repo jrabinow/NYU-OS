@@ -1,44 +1,50 @@
 CC=gcc
-CFLAGS=-Wall -Wextra -Wpedantic -Ofast -ansi -DC99
+CFLAGS=-Wall -Wextra -Wpedantic -ansi -DC99
 ifeq ($(CC), gcc)
 	CFLAGS += --short-enums
 endif
-LDFLAGS=-s
 
-all: depend linker
+BINARY=linker
 
-linker: utils.o token.o symbol.o instruction.o module.o
+all: CFLAGS += -Ofast
+all: LDFLAGS += -s
+all: depend $(BINARY)
+
+debug: CFLAGS += -g -DDEBUG
+debug: depend $(BINARY)
+
+$(BINARY): utils.o token.o symbol.o instruction.o module.o
 
 depend:
-	gcc -MM *.c > .depend
+	$(CC) -Iincludes -MM *.c > .depend
 
 -include .depend
 
-check: linker
+check: $(BINARY)
 	./tester.sh
 
-test: linker
+test: $(BINARY)
 	./tester.sh -oi
 
-memtest: linker
+memtest: $(BINARY)
 	./tester.sh -mi
 
-show: linker
+show: $(BINARY)
 	./tester.sh -o
 
-memshow: linker
+memshow: $(BINARY)
 	./tester.sh -m
 
-compress: linker
-	test -f linker~ || gzexe linker
+compress: $(BINARY)
+	gzexe $(BINARY) && $(RM) $(BINARY)~
 
 decompress:
-	test -f linker~ && gzexe -d linker~ linker || make
+	test -f $(BINARY) && gzexe -d $(BINARY) && $(RM) $(BINARY)~ || $(MAKE)
 
 .PHONY: clean distclean depend
 
 clean:
-	rm -f *.o linker~
+	$(RM) *.o
 
 distclean: clean
-	rm -f linker
+	$(RM) $(BINARY)

@@ -27,6 +27,8 @@ static void read_input(Scheduler, FILE*);
 static void run(Scheduler sched, bool trace);
 static void print_info(Scheduler this);
 
+static bool fill_event_queue(Scheduler this);
+
 static struct Scheduler_LT lt = {
 	NULL,
 	false,
@@ -35,6 +37,7 @@ static struct Scheduler_LT lt = {
 	&clone,
 	&to_string,
 	&read_input,
+	NULL,
 	NULL,
 	NULL,
 	NULL,
@@ -65,7 +68,7 @@ static Scheduler new(const Builder bld)
 		if(lt->clone == NULL)
 			lt->clone = &clone;
 		if(lt->to_string == NULL)
-			lt->to_string = &to_string;
+		lt->to_string = &to_string;
 		if(lt->read_input == NULL)
 			lt->read_input = &read_input;
 		if(lt->run == NULL)
@@ -79,8 +82,9 @@ static Scheduler new(const Builder bld)
 			&__##builder##__, ##__VA_ARGS__))
 	if(bld == &__Scheduler__)
 		bld->lt->lt_initialized = true;
+	this->event_queue = new(FIFO);
+	this->IO_queue = new(FIFO);
 	this->input_queue = new(FIFO);
-	this->IO_blocking = new(FIFO);
 	this->last_event = 0;
 	this->CPU_use = this->IO_use = this->turnaround = this->cpu_waiting =
 		this->throughput = 0.0;
@@ -91,7 +95,7 @@ static Scheduler new(const Builder bld)
 static void delete(Scheduler this)
 {
 	this->input_queue->lt->delete(this->input_queue);
-	this->IO_blocking->lt->delete(this->IO_blocking);
+	this->IO_queue->lt->delete(this->IO_queue);
 	/* call super destructor to finish the job */
 	__Scheduler__.super->lt->delete(this);
 }
@@ -101,7 +105,7 @@ static Scheduler clone(const Scheduler this)
 	Scheduler s = __Scheduler__.super->lt->clone(this);
 
 	s->input_queue = this->input_queue->lt->clone(this->input_queue);
-	s->IO_blocking = this->IO_blocking->lt->clone(this->IO_blocking);
+	s->event_queue = this->event_queue->lt->clone(this->event_queue);
 
 	/* copying individual primitive values is taken care of
 	 * in super's clone method */
@@ -119,7 +123,6 @@ static char *to_string(const Scheduler this)
 		return str;
 }
 
-
 static void read_input(Scheduler this, FILE *stream)
 {
 	Process p;
@@ -129,55 +132,35 @@ static void read_input(Scheduler this, FILE *stream)
 	while((count = fscanf(stream, "%d %d %d %d", &AT, &TC, &CB, &IO)) == 4) {
 		p = new(Process, pid++, AT, TC, CB, IO);
 		this->input_queue->lt->put(this->input_queue, (Object) p);
-		empty_buffer(stream);	/* remove trailing newlines from file */
+		empty_buffer(stream);	/* skip trailing newlines */
 	}
-
-/*	char *debug_str = NULL;
-	while(this->input_queue->lt->size(this->input_queue) > 0) {
-		p = (Process) this->input_queue->lt->get(this->input_queue);
-		debug_str = p->lt->to_string(p);
-		puts(debug_str);
-		free(debug_str);
-		p->lt->delete(p);
-	}
-	*/
 }
-#include <heap.h>
+
 static void run(Scheduler this, bool trace)
 {
 	Process p = NULL;
-	int runtime, quantum;
+	int runtime, quantum = INT_MAX;
 
-	Heap h = new(Heap);
-	while(this->input_queue->lt->size(this->input_queue) != 0) {
-		h->lt->put(h, this->input_queue->lt->get(this->input_queue));
-	}
+	if(instance_of(this, RR_Scheduler))
+		quantum = ((RR_Scheduler) this)->lt->get_quantum(this);
 
-	char *debug_str;
-	while(h->lt->size(h) != 0) {
-		p = h->lt->get(h);
-		debug_str = p->lt->to_string(p);
-		puts(debug_str);
-		free(debug_str);
-		p->lt->delete(p);
-	}
-	h->lt->delete(h);
+	while(fill_event_queue(this)) {
+		p = (Process) this->event_queue->lt->get(this->event_queue);
+		switch(p->state) {
 
-/*
-	if(instance_of(this, RR_Scheduler)) {
-		quantum = this->get_quantum(this);
-		while((p = this->get_event(this)) != NULL) {
-			runtime = myrandom(p->CB);
+			default:
+				fputs("ERROR: invalid state. Exiting now...\n", stderr);
+				exit(EXIT_FAILURE);
 		}
-	} else {
-		puts("lol");
 	}
-	*/
 }
 
-static void select_process(Scheduler this)
+static bool fill_event_queue(Scheduler this)
 {
+	const Process peek_ready, peek_IO, peek_input;
 
+
+	return true;
 }
 
 static void print_info(Scheduler this)

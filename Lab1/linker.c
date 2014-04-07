@@ -28,11 +28,6 @@ int main(int argc, char **argv)
 	Module *mod = NULL;
 	Array modules, symtable, unused_uselist;
 
-	if(argc < 2) {
-		usage(argv[0]);
-		exit(EXIT_FAILURE);
-	}
-
 	while((opt = getopt(argc, argv, "cfh")) != -1) {
 		switch(opt) {
 			case 'c':
@@ -42,16 +37,16 @@ int main(int argc, char **argv)
 				conserve_mem = false;
 				break;
 			case 'h':
-				usage(argv[0]);
-				return 0;
+				usage(argv[0], stdout);
+				exit(EXIT_SUCCESS);
 			default:
-				usage(argv[0]);
+				usage(argv[0], stderr);
 				exit(EXIT_FAILURE);
 		}
 	}
 
 	if(argc - optind == 0) {	/* if all parameters are options */
-		usage(argv[0]);
+		usage(argv[0], stderr);
 		exit(EXIT_FAILURE);
 	}
 

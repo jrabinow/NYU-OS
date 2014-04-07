@@ -27,7 +27,7 @@ struct LCFS_Scheduler {
 	Scheduler_LT lt;
 	time_t last_event;
 	double CPU_use, IO_use, turnaround, cpu_waiting, throughput;
-	FIFO input_queue, IO_blocking;
+	FIFO event_queue, IO_queue, input_queue;
 	Stack ready_queue;
 };
 
