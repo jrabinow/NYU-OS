@@ -79,7 +79,7 @@ static char *to_string(const void *obj)
 {
 	char *str = NULL;
 
-	if(asprintf(&str, "%p", obj) == -1) {
+	if(asprintf(&str, "%s: %p", ((Object) obj)->lt->bld->name, obj) == -1) {
 		perror("Error allocating memory ");
 		exit(EXIT_FAILURE);
 	} else

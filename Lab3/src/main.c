@@ -22,14 +22,16 @@
 int main(int argc, char *argv[])
 {
 	FILE *input = NULL;
+	bool need_random;
 	VMM vmm;
 	Verbose_Flag vflags;
-	bool need_random;
 
 	optind = parse_args(argc, argv, &vmm, &vflags);
 	need_random = instance_of(vmm, NRU_VMM) || instance_of(vmm, Random_VMM);
 
-	if((need_random && argc - optind != 2) || (! need_random && argc - optind != 1)) {	// if improper number of args
+	/* if improper number of args */
+	if((need_random && argc - optind != 2) ||
+			(argc - optind != 1 && argc - optind != 2)) {
 		usage(argv[0], stderr);
 		exit(EXIT_FAILURE);
 	} else if(need_random)
@@ -38,6 +40,7 @@ int main(int argc, char *argv[])
 
 	vmm->run(vmm, input, vflags);
 
+	vmm->delete(vmm);
 	fclose(input);
 	if(need_random)
 		delete_random();
@@ -63,7 +66,7 @@ int parse_args(int argc, char *argv[], VMM *vmm, Verbose_Flag *vflags)
 				break;
 			case 'f':
 				num_frames = (unsigned) atoi(optarg);
-				if(num_frames <= 0 || 268435456 <= num_frames) {	/* 28 bit PTE */
+				if(num_frames <= 0 || 1 << 28 <= num_frames) {	/* 28 bit PTE */
 					fputs("Error: invalid number of frames.\n\n", stderr);
 					usage(argv[0], stderr);
 					exit(EXIT_FAILURE);
@@ -76,16 +79,22 @@ int parse_args(int argc, char *argv[], VMM *vmm, Verbose_Flag *vflags)
 				for(c = 0; optarg[c] != '\0'; c++)
 					switch(optarg[c]) {
 						case 'O':
-							*vflags |= O;
+							*vflags |= OUTPUT;
 							break;
 						case 'P':
-							*vflags |= P;
+							*vflags |= PAGE_TABLE;
 							break;
 						case 'F':
-							*vflags |= F;
+							*vflags |= FRAME_TABLE;
 							break;
 						case 'S':
-							*vflags |= S;
+							*vflags |= SUMMARY;
+							break;
+						case 'p':
+							*vflags |= PAGE_TABLE_RUNNING;
+							break;
+						case 'f':
+							*vflags |= FRAME_TABLE_RUNNING;
 							break;
 						default:
 							fprintf(stderr, "Invalid output option '%c'\n\n", c);

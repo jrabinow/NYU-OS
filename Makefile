@@ -1,4 +1,4 @@
-all: linker
+all: linker mmu
 
 debug: RECIPE = debug
 debug: all
@@ -42,6 +42,6 @@ mmu:
 io_sched:
 	cd Lab4/src/ && $(MAKE) $(RECIPE)
 
-.PHONY: linker scheduler mmu io_sched clean distclean check test memtest show\
-	memshow compress decompress
+.PHONY: all linker scheduler mmu io_sched clean distclean check test memtest\
+	show memshow compress decompress
 

@@ -20,20 +20,19 @@
 #include <VAging_VMM.h>
 
 static VMM new(const Builder, int);
-static void delete(VMM);
-static void put(VMM, PTE);
-static PTE get(VMM);
+static int get_frame_index(VMM);
+static char *to_string(VMM);
 
 static struct VMM_LT lt = {
 	NULL,
 	false,
 	&new,
-	&delete,
 	NULL,
 	NULL,
+	&to_string,
 	NULL,
-	&put,
-	&get
+	&get_frame_index,
+	NULL
 };
 
 const struct Builder __VAging_VMM__ = {
@@ -49,24 +48,59 @@ static VMM new(const Builder bld, int num_frames)
 
 	if(bld == &__VAging_VMM__)
 		bld->lt->lt_initialized = true;
+	
+	memset(this->age_vector, 0, sizeof(uint32_t) * NUM_VIRT_PAGES);
+	this->used_frames = 0;
 
 	return (VMM) this;
 }
 
-static void delete(VMM vmm)
+static char *to_string(const VMM vmm)
 {
+	unsigned i;
 	VAging_VMM this = (VAging_VMM) vmm;
 
-	__VAging_VMM__.super->lt->delete(this);
+	for(i = 0; i < this->num_frames; i++)
+		switch(this->frame_table[i]) {
+			case EMPTY:
+				fwrite("* ", 2, sizeof(char), stdout);
+				break;
+			default:
+				printf("%d ", this->frame_table[i]);
+		}
+	printf(" || ");
+	for(i = 0; i < NUM_VIRT_PAGES; i++)
+		if(this->page_table[i].present)
+			printf("%d:%x ", i, this->age_vector[i]);
+		else
+			printf("* ");
+	putchar('\n');
+	return NULL;
 }
 
-static void put(VMM vmm, PTE pte)
+static int get_frame_index(VMM vmm)
 {
 	VAging_VMM this = (VAging_VMM) vmm;
-}
+	uint32_t min = UINT_MAX;
+	unsigned i, ret = 0;
 
-static PTE get(VMM vmm)
-{
-	PTE tmp;
-	return tmp;
+	if(this->used_frames >= this->num_frames) {
+		for(i = 0; i < NUM_VIRT_PAGES; i++) {
+			if(this->page_table[i].present) {
+				this->age_vector[i] >>= 1;
+				if(this->page_table[i].referenced) {
+					this->age_vector[i] |= 1LU << 31;
+					this->page_table[i].referenced = false;
+				}
+				if(this->age_vector[i] < min) {
+					ret = i;
+					min = this->age_vector[i];
+				}
+			}
+		}
+		this->age_vector[ret] = 0;
+		return this->page_table[ret].frame_number;
+	}
+
+	return this->used_frames++;
 }

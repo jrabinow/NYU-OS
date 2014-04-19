@@ -77,11 +77,87 @@ FILE *xfopen(const char *path, const char *mode)
 		return f;
 }
 
-bool is_valid_int(const char *str)
+void *initialize_vector(void *dest, const void *src, size_t size, size_t nmemb)
 {
-	for(; *str != '\0'; str++)
-		if( ! isdigit(*str))
-			return false;
-	return true;
+	size_t i;
+
+	memcpy(dest, src, size);
+	for(i = 1; i << 1 <= nmemb; i <<= 1)
+		memcpy(dest + i * size, dest, i * size);
+	memcpy(dest + i * size, dest, (nmemb - i) * size);
+	return dest;
 }
 
+void swallow_whitespace(FILE *stream)
+{
+	int c;
+	
+	do {
+		while((c = getc_unlocked(stream)) == ' ' || c == '\t' || c == '\n');
+		if(c == '#')
+			empty_buffer(stream); 
+	} while(c == '#');
+	ungetc(c, stream);
+}
+
+void mempool_create(struct mempool *mp, size_t size, size_t nmemb)
+{
+	unsigned i;
+	void *val;
+
+	mp->mem = xmalloc((sizeof(unsigned) + size) * nmemb);
+	mp->ptrs = xmalloc(sizeof(unsigned*) * nmemb);
+	mp->size = size;
+	mp->nmemb = nmemb;
+	mp->index = 0;
+
+	val = mp->mem;
+	for(i = 0; i < nmemb; i++) {
+		mp->ptrs[i] = val;
+		val += sizeof(unsigned) + size;
+	}
+}
+
+void *mempool_alloc(struct mempool *mp)
+{
+/*
+ * Problem when enlarging memory pool: mp->mem will point to a different chunk of mem,
+ * but the pointers pointing to the memory in the mempool will not be updated. Not much
+ * we can do about that as of now => let's  disable pool enlarging 
+ *
+ * WARNING: this means that if you call mempool_alloc more than is reasonable, you WILL
+ * have problems
+ *
+	unsigned i;
+	void *val;
+
+	if(mp->index == mp->nmemb) {
+		mp->mem = xrealloc(mp->mem, (sizeof(unsigned) + mp->size) * (mp->nmemb <<= 1));
+		mp->ptrs = xrealloc(mp->ptrs, sizeof(unsigned*) * mp->nmemb);
+		
+		val = mp->mem;
+		for(i = 0; i < mp->nmemb; i++) {
+			mp->ptrs[i] = val;
+			val += sizeof(unsigned) + mp->size;
+		}
+	}
+*/
+	*(unsigned*) mp->ptrs[mp->index] = mp->index;
+	return mp->ptrs[mp->index++] + sizeof(unsigned);
+}
+
+void mempool_free(struct mempool *mp, void *ptr)
+{
+	void *swap;
+	unsigned idx = *(unsigned*) (ptr - sizeof(unsigned));
+
+	swap = mp->ptrs[idx];
+	mp->ptrs[idx] = mp->ptrs[--mp->index];
+	mp->ptrs[mp->index] = swap;
+}
+
+void mempool_delete(struct mempool *mp)
+{
+	free(mp->mem);
+	free(mp->ptrs);
+}

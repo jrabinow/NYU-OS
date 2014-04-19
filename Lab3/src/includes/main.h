@@ -26,6 +26,7 @@
 /* header files that are specific to this project (passed to gcc with -I option) */
 #include <vmm.h>
 #include <utils.h>
+#include <random.h>
 
 #define ERR_MSG			"Error: invalid VMM algorithm specified\n\n"
 

@@ -8,7 +8,7 @@
  *  the Free Software Foundation, either version 3 of the License, or
  *  (at your option) any later version.
  *
- *  Lab3-Mem-manager is distributed in the hope that it will be useful,
+ *  Lab3Mem-manager is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
@@ -20,20 +20,18 @@
 #include <Random_VMM.h>
 
 static VMM new(const Builder, int);
-static void delete(VMM);
-static void put(VMM, PTE);
-static PTE get(VMM);
+static int get_frame_index(VMM);
 
 static struct VMM_LT lt = {
 	NULL,
 	false,
 	&new,
-	&delete,
 	NULL,
 	NULL,
 	NULL,
-	&put,
-	&get
+	NULL,
+	&get_frame_index,
+	NULL
 };
 
 const struct Builder __Random_VMM__ = {
@@ -49,24 +47,15 @@ static VMM new(const Builder bld, int num_frames)
 
 	if(bld == &__Random_VMM__)
 		bld->lt->lt_initialized = true;
+	this->used_frames = 0;
 
 	return (VMM) this;
 }
 
-static void delete(VMM vmm)
+static int get_frame_index(VMM vmm)
 {
 	Random_VMM this = (Random_VMM) vmm;
 
-	__Random_VMM__.super->lt->delete(this);
-}
-
-static void put(VMM vmm, PTE pte)
-{
-	Random_VMM this = (Random_VMM) vmm;
-}
-
-static PTE get(VMM vmm)
-{
-	PTE tmp;
-	return tmp;
+	return this->used_frames < this->num_frames ?
+		(int) this->used_frames++ : myrandom(vmm->num_frames);
 }

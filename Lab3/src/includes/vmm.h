@@ -20,55 +20,86 @@
 #ifndef VMM_H
 #define VMM_H
 
+/* standard header files */
+#include <stdint.h>	/* uint64_t, uint_fast16_t, intptr_t */
+#include <inttypes.h>	/* macro for portable printf_ing of uint64_t */
+#include <limits.h>	/* INT_MIN */
+
+/* header files that are specific to this project (passed to gcc with -I option) */
 #include <utils.h>
-#include <random.h>
 #include <object.h>
-#include <token.h>
 
 #define NUM_VIRT_PAGES 64
 
-typedef enum { O = 1, P = 2, F = 4, S = 8 } Verbose_Flag;
+typedef enum {
+	OUTPUT			=  1,
+	PAGE_TABLE		=  2,
+	FRAME_TABLE		=  4,
+	SUMMARY			=  8,
+	PAGE_TABLE_RUNNING	= 16,
+	FRAME_TABLE_RUNNING	= 32
+} Verbose_Flag;
+
+typedef enum { READ = 0, WRITE = 1 } Operation;
+
+#define UNMAP_COST	 400
+#define MAP_COST	 400
+#define PAGEIN_COST	3000
+#define PAGEOUT_COST	3000
+#define ZEROS_COST	 150
 
 typedef struct {
-	unsigned index:28;
-	unsigned modified:1;
-	unsigned pagedout:1;
-	unsigned present:1;
-	unsigned referenced:1;
+	uint32_t frame_number:28;	/* can have at most 2^28 virtual pages */
+	uint32_t modified:1;
+	uint32_t pagedout:1;
+	uint32_t present:1;
+	uint32_t referenced:1;
 } PTE;
+
+struct VMM {
+	struct VMM_LT *lt;
+	unsigned num_frames;
+	int *frame_table;
+	PTE page_table[NUM_VIRT_PAGES];
+	unsigned instr_count, unmaps, maps, pageins, pageouts, zeros;
+};
+
+/* empty frames have value EMPTY */
+#define EMPTY	INT_MIN
+
+typedef struct VMM* VMM;
 
 struct VMM_LT {
 	Builder bld;
 	bool lt_initialized;
-	struct VMM *(*new)(const Builder, int);
-	void (*delete)(struct VMM*);
-	struct VMM *(*clone)(const struct VMM*);
-	char *(*to_string)(const struct VMM*);
-	void (*run)(struct VMM*, FILE*, Verbose_Flag);
-	void (*put)(struct VMM*, PTE);
-	PTE (*get)(struct VMM*);
+	VMM (*new)(const Builder, int);
+	void (*delete)(VMM);
+	VMM (*clone)(const VMM);
+	char *(*to_string)(const VMM);
+	void (*run)(VMM, FILE*, Verbose_Flag);
+	int (*get_frame_index)(VMM);
+	void (*update)(VMM, int);
 };
 
 typedef struct VMM_LT* VMM_LT;
-
-struct VMM {
-	VMM_LT lt;
-	unsigned num_frames;
-	
-	long long unmaps, maps, pageins, pageouts, zeros, totalcost;
-};
-
-typedef struct VMM* VMM;
 
 extern const struct Builder __VMM__, __NRU_VMM__, __LRU_VMM__, __Random_VMM__, __FIFO_VMM__,
 	__SecChance_VMM__, __PClock_VMM__, __VClock_VMM__, __PAging_VMM__, __VAging_VMM__;
 
 typedef struct {
-	unsigned char valid:1;
-	unsigned char operation_type:1;
-	unsigned char virtual_page:6;
+	uint_fast16_t valid:1;
+	uint_fast16_t operation_type:1;
+	uint_fast16_t virtual_page:14;
 } Instruction;
 
 Instruction read_instruction(FILE *f);
+
+void map(VMM this, int frame_index, int page_index, Verbose_Flag flags);
+void unmap(VMM this, int frame_index, Verbose_Flag flags);
+void page_out(VMM this, int frame_index, Verbose_Flag flags);
+void page_in(VMM this, int frame_index, int page_index, Verbose_Flag flags);
+void zeros(VMM this, int frame_index, Verbose_Flag flags);
+
+void print_final_stats(VMM this, Verbose_Flag flags);
 
 #endif

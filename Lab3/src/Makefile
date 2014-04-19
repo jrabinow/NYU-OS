@@ -4,7 +4,7 @@ ifeq ($(CC), gcc)
 	CFLAGS += --short-enums
 endif
 
-BINARY=vmm
+BINARY=mmu
 
 all: CFLAGS += -Ofast
 all: LDFLAGS += -s
@@ -13,9 +13,10 @@ all: depend $(BINARY)
 debug: CFLAGS += -g -DDEBUG
 debug: depend $(BINARY)
 
-$(BINARY): main.o random.o linkedlist.o FIFO.o token.o utils.o object.o\
-	NRU_VMM.o FIFO_VMM.o Random_VMM.o LRU_VMM.o VAging_VMM.o VClock_VMM.o\
-	PAging_VMM.o PClock_VMM.o SecChance_VMM.o
+$(BINARY): main.o random.o FIFO.o utils.o object.o vmm.o NRU_VMM.o FIFO_VMM.o\
+	Random_VMM.o LRU_VMM.o VAging_VMM.o VClock_VMM.o PAging_VMM.o\
+	PClock_VMM.o SecChance_VMM.o
+	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $@
 
 depend:
 	$(CC) -Iincludes -MM *.c > .depend

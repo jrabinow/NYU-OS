@@ -134,7 +134,7 @@ int myrandom(int burst)
 	 * In practice, there is no need, as the file offset will always be
 	 * larger than the number of values read from the file */
 		randvals[-1] = 0;
-	return 1 + (randvals[randvals[-1]++] % burst);
+	return randvals[randvals[-1]++] % burst;
 }
 
 void delete_random(void)
