@@ -53,10 +53,8 @@
 
 void usage(char *progname, FILE *outstream);
 
-/* Forall c in str, isdigit(c) must return true.
- * In this particular case, negative values (strings beginning with '-') will
- * be considered invalid */
-bool is_valid_int(const char *str);
+/* swallow whitespace and comment lines */
+void swallow_whitespace(FILE *stream);
 
 /* avoid having to check for NULL return values: program prints an error
  * message and exits */
@@ -64,6 +62,8 @@ FILE *xfopen(const char *path, const char *mode);
 void *xrealloc(void *ptr, size_t size);
 void *xmalloc(size_t size);
 char *xstrdup(const char *str);
+
+void *initialize_vector(void *dest, const void *src, size_t size, size_t nmemb);
 
 /* finishes reading line. For use with scanf/fscanf */
 #define empty_buffer(stream)	{\
@@ -74,5 +74,16 @@ char *xstrdup(const char *str);
 /* prevents newbies from complaining about how C is a horrible language
  * with weird and indecifferable function names :p */
 #define equals(str1, str2)	(strcmp(str1, str2) == 0)
+
+
+struct mempool {
+	void *mem, **ptrs;
+	size_t size, nmemb, index;
+};
+
+void mempool_create(struct mempool *mp, size_t size, size_t nmemb);
+void *mempool_alloc(struct mempool *mp);
+void mempool_free(struct mempool *mp, void *ptr);
+void mempool_delete(struct mempool *mp);
 
 #endif

@@ -21,11 +21,15 @@
 #define RANDOM_VMM_H
 
 #include <vmm.h>
+#include <random.h>
 
 struct Random_VMM {
 	VMM_LT lt;
 	unsigned num_frames;
-	long long unmaps, maps, pageins, pageouts, zeros, totalcost;
+	int *frame_table;
+	PTE page_table[NUM_VIRT_PAGES];
+	unsigned instr_count, unmaps, maps, pageins, pageouts, zeros;
+	unsigned used_frames;
 };
 
 typedef struct Random_VMM* Random_VMM;

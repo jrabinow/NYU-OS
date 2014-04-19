@@ -22,10 +22,19 @@
 
 #include <vmm.h>
 
+struct Elem {
+	int index;
+	struct Elem *next, *prev;
+};
+
 struct LRU_VMM {
 	VMM_LT lt;
 	unsigned num_frames;
-	long long unmaps, maps, pageins, pageouts, zeros, totalcost;
+	int *frame_table;
+	PTE page_table[NUM_VIRT_PAGES];
+	unsigned instr_count, unmaps, maps, pageins, pageouts, zeros;
+	struct Elem **list_ptrs;
+	struct Elem *sorted_list, *tail;
 };
 
 typedef struct LRU_VMM* LRU_VMM;

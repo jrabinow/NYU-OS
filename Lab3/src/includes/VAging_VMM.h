@@ -25,7 +25,12 @@
 struct VAging_VMM {
 	VMM_LT lt;
 	unsigned num_frames;
-	long long unmaps, maps, pageins, pageouts, zeros, totalcost;
+	int *frame_table;
+	PTE page_table[NUM_VIRT_PAGES];
+	unsigned instr_count, unmaps, maps, pageins, pageouts, zeros;
+	unsigned used_frames;
+	uint32_t age_vector[NUM_VIRT_PAGES];
+
 };
 
 typedef struct VAging_VMM* VAging_VMM;

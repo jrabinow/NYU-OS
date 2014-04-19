@@ -21,11 +21,15 @@
 #define SECCHANCE_VMM_H
 
 #include <vmm.h>
+#include <FIFO.h>
 
 struct SecChance_VMM {
 	VMM_LT lt;
 	unsigned num_frames;
-	long long unmaps, maps, pageins, pageouts, zeros, totalcost;
+	int *frame_table;
+	PTE page_table[NUM_VIRT_PAGES];
+	unsigned instr_count, unmaps, maps, pageins, pageouts, zeros;
+	FIFO frames;
 };
 
 typedef struct SecChance_VMM* SecChance_VMM;

@@ -20,20 +20,18 @@
 #include <VClock_VMM.h>
 
 static VMM new(const Builder, int);
-static void delete(VMM);
-static void put(VMM, PTE);
-static PTE get(VMM);
+static int get_frame_index(VMM);
 
 static struct VMM_LT lt = {
 	NULL,
 	false,
 	&new,
-	&delete,
 	NULL,
 	NULL,
 	NULL,
-	&put,
-	&get
+	NULL,
+	&get_frame_index,
+	NULL
 };
 
 const struct Builder __VClock_VMM__ = {
@@ -50,23 +48,34 @@ static VMM new(const Builder bld, int num_frames)
 	if(bld == &__VClock_VMM__)
 		bld->lt->lt_initialized = true;
 
+	this->hand = 0;
+
 	return (VMM) this;
 }
 
-static void delete(VMM vmm)
+static int get_frame_index(VMM vmm)
 {
 	VClock_VMM this = (VClock_VMM) vmm;
+	int index;
 
-	__VClock_VMM__.super->lt->delete(this);
-}
+	if(this->frame_table[this->hand] == EMPTY) {
+		index = this->hand;
+		this->hand = (this->hand + 1) % this->num_frames;
+		return index;
+	}
 
-static void put(VMM vmm, PTE pte)
-{
-	VClock_VMM this = (VClock_VMM) vmm;
-}
+	while(true) {
+		if(this->page_table[this->hand].present) {
+			if(this->page_table[this->hand].referenced)
+				this->page_table[this->hand].referenced = false;
+			else
+				break;
+		}
+		this->hand = (this->hand + 1) % NUM_VIRT_PAGES;
+	}
+	
+	index = this->page_table[this->hand].frame_number;
+	this->hand = (this->hand + 1) % NUM_VIRT_PAGES;
 
-static PTE get(VMM vmm)
-{
-	PTE tmp;
-	return tmp;
+	return index;
 }

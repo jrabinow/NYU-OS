@@ -20,20 +20,18 @@
 #include <PClock_VMM.h>
 
 static VMM new(const Builder, int);
-static void delete(VMM);
-static void put(VMM, PTE);
-static PTE get(VMM);
+static int get_frame_index(VMM);
 
 static struct VMM_LT lt = {
 	NULL,
 	false,
 	&new,
-	&delete,
 	NULL,
 	NULL,
 	NULL,
-	&put,
-	&get
+	NULL,
+	&get_frame_index,
+	NULL
 };
 
 const struct Builder __PClock_VMM__ = {
@@ -50,23 +48,28 @@ static VMM new(const Builder bld, int num_frames)
 	if(bld == &__PClock_VMM__)
 		bld->lt->lt_initialized = true;
 
+	this->hand = 0;
+
 	return (VMM) this;
 }
 
-static void delete(VMM vmm)
+static int get_frame_index(VMM vmm)
 {
 	PClock_VMM this = (PClock_VMM) vmm;
+	int index;
 
-	__PClock_VMM__.super->lt->delete(this);
-}
+	if(this->frame_table[this->hand] == EMPTY) {
+		index = this->hand;
+		this->hand = (this->hand + 1) % this->num_frames;
+		return index;
+	}
 
-static void put(VMM vmm, PTE pte)
-{
-	PClock_VMM this = (PClock_VMM) vmm;
-}
+	while(this->page_table[this->frame_table[this->hand]].referenced) {
+		this->page_table[this->frame_table[this->hand]].referenced = false;
+		this->hand = (this->hand + 1) % this->num_frames;
+	}
+	index = this->hand;
+	this->hand = (this->hand + 1) % this->num_frames;
 
-static PTE get(VMM vmm)
-{
-	PTE tmp;
-	return tmp;
+	return index;
 }

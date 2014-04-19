@@ -21,8 +21,7 @@
 
 static VMM new(const Builder bld, int num_frames);
 static void delete(VMM);
-static void put(VMM, PTE);
-static PTE get(VMM);
+static int get_frame_index(VMM);
 
 static struct VMM_LT lt = {
 	NULL,
@@ -32,8 +31,8 @@ static struct VMM_LT lt = {
 	NULL,
 	NULL,
 	NULL,
-	&put,
-	&get
+	&get_frame_index,
+	NULL
 };
 
 const struct Builder __NRU_VMM__ = {
@@ -49,6 +48,7 @@ static VMM new(const Builder bld, int num_frames)
 
 	if(bld == &__NRU_VMM__)
 		bld->lt->lt_initialized = true;
+	this->replacement_request = this->used_frames = 0;
 
 	return (VMM) this;
 }
@@ -60,13 +60,35 @@ static void delete(VMM vmm)
 	__NRU_VMM__.super->lt->delete(this);
 }
 
-static void put(VMM vmm, PTE pte)
+static int get_frame_index(VMM vmm)
 {
+	NRU_VMM this = (NRU_VMM) vmm;
+	unsigned i;
+	int cpt[4] = {0}, class;
+	int classes[4][64];
 
-}
-
-static PTE get(VMM vmm)
-{
-	PTE tmp;
-	return tmp;
+	if(this->used_frames >= this->num_frames) {
+		this->replacement_request++;
+		if(this->replacement_request % REFERENCE_RESET_INTERVAL == 0) {
+			for(i = 0; i < NUM_VIRT_PAGES; i++)
+				if(this->page_table[i].present) {
+					class = (this->page_table[i].referenced
+					<< 1) | this->page_table[i].modified;
+					classes[class][cpt[class]++] = i;
+					this->page_table[i].referenced = false;
+				}
+		} else
+			for(i = 0; i < NUM_VIRT_PAGES; i++)
+				if(this->page_table[i].present) {
+					class = (this->page_table[i].referenced
+					<< 1) | this->page_table[i].modified;
+					classes[class][cpt[class]++] = i;
+				}
+		for(i = 0; i < 4; i++) {
+			if(cpt[i] > 0)
+				return this->page_table[classes[i]
+					[myrandom(cpt[i])]].frame_number;
+		}
+	}
+	return this->used_frames++;
 }

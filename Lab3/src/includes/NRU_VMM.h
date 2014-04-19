@@ -21,12 +21,18 @@
 #define NRU_VMM_H
 
 #include <vmm.h>
+#include <random.h>
 
 struct NRU_VMM {
 	VMM_LT lt;
 	unsigned num_frames;
-	long long unmaps, maps, pageins, pageouts, zeros, totalcost;
+	int *frame_table;
+	PTE page_table[NUM_VIRT_PAGES];
+	unsigned instr_count, unmaps, maps, pageins, pageouts, zeros;
+	unsigned used_frames, replacement_request;
 };
+
+#define REFERENCE_RESET_INTERVAL	10
 
 typedef struct NRU_VMM* NRU_VMM;
 
