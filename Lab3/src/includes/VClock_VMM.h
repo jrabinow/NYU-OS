@@ -21,12 +21,14 @@
 #define VCLOCK_VMM_H
 
 #include <vmm.h>
+#include <FIFO.h>
 
 struct VClock_VMM {
 	VMM_LT lt;
 	unsigned num_frames;
 	int *frame_table;
 	PTE page_table[NUM_VIRT_PAGES];
+	FIFO free_frames;
 	unsigned instr_count, unmaps, maps, pageins, pageouts, zeros;
 	unsigned hand;
 };

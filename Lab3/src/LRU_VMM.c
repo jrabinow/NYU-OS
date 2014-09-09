@@ -127,6 +127,7 @@ static int get_frame_index(VMM vmm)
 #ifdef DEBUG
 	/*puts(__func__); */
 	unsigned i;
+	puts("BEFORE");
 	printf("this->sorted_list: %p\tthis->tail: %p\n", this->sorted_list, this->tail);
 	for(i = 0; i < this->num_frames; i++) {
 		printf("%d: %p (%d) ->", i, this->list_ptrs[i], this->frame_table[this->list_ptrs[i]->index]);
@@ -136,17 +137,19 @@ static int get_frame_index(VMM vmm)
 			puts("null");
 	}
 #endif
+	/* remove list head */
 	if(tmp->next != NULL) {
 		this->sorted_list = tmp->next;
 		tmp->next->prev = NULL;
 	}
+	/* put element tmp in last position of list */
 	if(this->tail != tmp) {
-		this->tail->next = tmp;
 		tmp->prev = this->tail;
-		this->tail = this->tail->next;
+		this->tail = this->tail->next = tmp;
 		tmp->next = NULL;
 	}
 #ifdef DEBUG
+	puts("AFTER");
 	printf("this->sorted_list: %p\tthis->tail: %p\n", this->sorted_list, this->tail);
 	for(i = 0; i < this->num_frames; i++) {
 		printf("%d: %p (%d) ->", i, this->list_ptrs[i], this->frame_table[this->list_ptrs[i]->index]);
@@ -167,8 +170,9 @@ static void update(VMM vmm, int page_index)
 	struct Elem *tmp = this->list_ptrs[frame_index];
 #ifdef DEBUG
 	unsigned i;
+	puts("BEFORE");
 	printf("this->sorted_list: %p\tthis->tail: %p\n", this->sorted_list, this->tail);
-	for(i = 0; i < this->num_frames; i++) 
+	for(i = 0; i < this->num_frames; i++) {
 		printf("%d: %p (%d) ->", i, this->list_ptrs[i], this->frame_table[this->list_ptrs[i]->index]);
 		if(this->list_ptrs[i] != NULL)
 			printf("%p\n", this->list_ptrs[i]->next);
@@ -176,21 +180,26 @@ static void update(VMM vmm, int page_index)
 			puts("null");
 	}
 #endif
+	/* update list head if need be (accessed element is head of list) */
 	if(this->sorted_list == tmp) {
 		this->sorted_list = tmp->next;
+		/* assumes more than 1 frames */
 		tmp->next->prev = NULL;
 	}
+	/* move accessed element at end of list */
 	if(this->tail != tmp) {
+		/* remove tmp from linked list */
 		if(tmp->prev != NULL)
 			tmp->prev->next = tmp->next;
-		tmp->next->prev = tmp->prev;
-		this->tail->next = tmp;
+		tmp->next->prev = tmp->prev; /* tmp != this->tail => tmp->next != NULL */
+		/* add tmp to end of linked list */
 		tmp->prev = this->tail;
-		this->tail = this->tail->next;
+		this->tail = this->tail->next = tmp;
 		tmp->next = NULL;
 	}
 
 #ifdef DEBUG
+	puts("AFTER");
 	printf("this->sorted_list: %p\tthis->tail: %p\n", this->sorted_list, this->tail);
 	for(i = 0; i < this->num_frames; i++) {
 		printf("%d: %p (%d) ->", i, this->list_ptrs[i], this->frame_table[this->list_ptrs[i]->index]);

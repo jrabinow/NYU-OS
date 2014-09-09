@@ -63,12 +63,6 @@ static void delete(VMM vmm)
 {
 	SecChance_VMM this = (SecChance_VMM) vmm;
 
-	/* we are storing values as opposed to objects in the FIFO. If we call
-	 * delete immediately on the FIFO, the destructor will try to call delete
-	 * on every single of the values. Which will lead to a segfault.
-	 * So before calling delete on the FIFO, we simply empty it of all the 
-	 * values it contains */
-	while(this->frames->lt->get(this->frames));
 	this->frames->lt->delete(this->frames);
 
 	__SecChance_VMM__.super->lt->delete(this);

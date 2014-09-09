@@ -28,6 +28,7 @@ struct SecChance_VMM {
 	unsigned num_frames;
 	int *frame_table;
 	PTE page_table[NUM_VIRT_PAGES];
+	FIFO free_frames;
 	unsigned instr_count, unmaps, maps, pageins, pageouts, zeros;
 	FIFO frames;
 };
