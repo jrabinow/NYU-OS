@@ -22,13 +22,13 @@
 void usage(char *progname, FILE *stream)
 {
 	fprintf(stream, "Usage: %s [OPTION]... INPUT-FILE [RANDOM FILE]\n" , progname);
-	fputs(		"Options:	-a=ARG	algorithm used by the Virtual Memory Manager\n"
-			"			ARG has the following specification: [ NlrfscCaA ]\n"
-			"			The default algorithm is LRU\n"
-			"		-f=ARG	Number of frames. The default number of frames is 32\n"
-			"		-h	print this help message\n"
-			"		-o=ARG	output format\n"
-			"			ARG has the following specification: [OPFS]{1,4}\n", stream);
+	fputs(		"Options:"	"\t-a=ARG"	"\talgorithm used by the Virtual Memory Manager\n"
+							"\t\t\tARG has the following specification: [ NlrfscCaA ]\n"
+							"\t\t\tThe default algorithm is LRU\n"
+					"\t\t-f=ARG"	"\tNumber of frames. The default number of frames is 32\n"
+					"\t\t-h"	"\tprint this help message\n"
+					"\t\t-o=ARG"	"\toutput format\n"
+							"\t\t\tARG has the following specification: [OPFS]{1,4}\n", stream);
 }
 
 void *xmalloc(size_t size)

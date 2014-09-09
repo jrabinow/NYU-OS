@@ -24,16 +24,16 @@ static void *clone(const void *obj);
 static char *to_string(const void *obj);
 
 struct Lookup_Table lt = {
-	NULL,					/* pointer to builder. We define the Object builder
-						 * later on in the code, so we set it to NULL for now */
-	true,					/* lt_initialized boolean. Lookup table methods need underwriting
-						 * only once, so once an object of a class has been initialized
-						 * a first time, we set this to true to indicate that there is no
-						 * need to go through the entire underwriting process again */
+	NULL,		/* pointer to builder. We define the Object builder
+			 * later on in the code, so we set it to NULL for now */
+	true,		/* lt_initialized boolean. Lookup table methods need underwriting
+			 * only once, so once an object of a class has been initialized
+			 * a first time, we set this to true to indicate that there is no
+			 * need to go through the entire underwriting process again */
 	&new,
-	&free,					/* Destructor. In this case, new(Object) only allocates some
-						 * memory and initializes some values => we can just call free
-						 * on the object and it will be destroyed without any memory leak */
+	&free,		/* Destructor. In this case, new(Object) only allocates some
+			 * memory and initializes some values => we can just call free
+			 * on the object and it will be destroyed without any memory leak */
 	&clone,
 	&to_string
 };

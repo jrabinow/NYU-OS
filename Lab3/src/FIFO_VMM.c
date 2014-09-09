@@ -47,7 +47,7 @@ static VMM new(const Builder bld, int num_frames)
 {
 	intptr_t index;
 	FIFO_VMM this = __FIFO_VMM__.super->lt->new(bld, num_frames);
-	
+
 	if(bld == &__FIFO_VMM__)
 		bld->lt->lt_initialized = true;
 #define new(builder, ...)	((__##builder##__).lt->new((const Builder)\
@@ -63,13 +63,6 @@ static VMM new(const Builder bld, int num_frames)
 static void delete(VMM vmm)
 {
 	FIFO_VMM this = (FIFO_VMM) vmm;
-
-	/* we are storing values as opposed to objects in the FIFO. If we call
-	 * delete immediately on the FIFO, the destructor will try to call delete
-	 * on every single of the values. Which will lead to a segfault.
-	 * So before calling delete on the FIFO, we simply empty it of all the 
-	 * values it contains */
-	while(this->frames->lt->get(this->frames));
 	this->frames->lt->delete(this->frames);
 
 	__FIFO_VMM__.super->lt->delete(this);
@@ -77,20 +70,9 @@ static void delete(VMM vmm)
 
 static VMM clone(const VMM vmm)
 {
-	void *data;
 	FIFO_VMM this = (FIFO_VMM) vmm,
 		 new_fifo_vmm = __FIFO_VMM__.super->lt->clone(this);
-	/* same thing as for delete(). Since the FIFO contains values, we must
-	 * clone it manually */
-	FIFO tmp = new(FIFO);
-
-	while((data = this->frames->lt->get(this->frames)))
-		tmp->lt->put(tmp, data);
-	while((data = tmp->lt->get(this->frames))) {
-		this->frames->lt->put(this->frames, data);
-		new_fifo_vmm->frames->lt->put(new_fifo_vmm->frames, data);
-	}
-	tmp->lt->delete(tmp);
+	new_fifo_vmm->frames = this->frames->lt->clone(this->frames);
 
 	return (VMM) new_fifo_vmm;
 }

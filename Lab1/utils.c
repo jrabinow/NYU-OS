@@ -22,7 +22,7 @@
 void usage(char *progname, FILE *outstream)
 {
 	fprintf(outstream, "Usage: %s [OPTION]... FILE1 ...\n", progname);
-	fputs(		"Options:	-c	Conserve memory by reading input files twice\n"
+	(void) fputs(		"Options:	-c	Conserve memory by reading input files twice\n"
 			"		-f	Enable faster processing by keeping modules in memory (default)\n"
 			"		-h	Print this help message\n", outstream);
 }
@@ -51,11 +51,11 @@ void *xrealloc(void *ptr, size_t size)
 char *xstrdup(const char *str)
 {
 	char *new_str = NULL;
-	int len = strlen(str);
+	size_t len = strlen(str);
 
 	/* strdup is not ANSI C. We do its equivalent in this function */
 	new_str = malloc(len + 1);
-	if(new_str == NULL) {
+	if(new_str == (char*) NULL) {
 		perror("Error allocating memory ");
 		exit(EXIT_FAILURE);
 	} else

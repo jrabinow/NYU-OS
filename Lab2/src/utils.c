@@ -22,12 +22,11 @@
 void usage(char *progname, FILE *outstream)
 {
 	fprintf(outstream, "Usage: %s [OPTION]... path/to/input-file path/to/random/file\n" , progname);
-	fputs(		"Options:		-h	print this help message\n"
-			"			-s=ARG	scheduler mode\n"
-			"			ARG has the following specification: [ FLS | R<num> ]\n"
-			"			The scheduler mode is FCFS by default\n"
-			"			-v	verbose mode\n\n"	, outstream);
-
+	fputs("Options:"		"\t-h"	"\tprint this help message\n"
+					"\t\t-s=ARG"	"\tscheduler mode\n"
+					"\t\t\tARG has the following specification: [ FLS | R<num> ]\n"
+					"\t\t\tThe scheduler mode is FCFS by default\n"
+					"\t\t-v"	"\tverbose mode\n\n", outstream);
 }
 
 void *xmalloc(size_t size)
