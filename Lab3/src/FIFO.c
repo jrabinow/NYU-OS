@@ -72,8 +72,8 @@ static void delete(FIFO this)
 
 	while((tmp = this->out) != NULL) {
 		this->out = this->out->next;
-		if(tmp->obj != NULL)
-			tmp->obj->lt->delete(tmp->obj);
+/*		if(tmp->obj != NULL)
+ *			tmp->obj->lt->delete(tmp->obj); */
 		free(tmp);
 	}
 	__FIFO__.super->lt->delete(this);
@@ -86,13 +86,13 @@ static FIFO clone(FIFO this)
 
 	if(iterator != NULL) {
 		f->out = tmp = (Elem*) xmalloc(sizeof(Elem));
-		tmp->obj = iterator->obj != NULL ?
-			iterator->obj->lt->clone(iterator->obj) : NULL;
+		tmp->obj = iterator->obj; /* != NULL ?
+			iterator->obj->lt->clone(iterator->obj) : NULL; */
 
 		while((iterator = iterator->next) != NULL) {
 			tmp->next = (Elem*) xmalloc(sizeof(Elem));
-			tmp->next->obj = iterator->obj != NULL ?
-				iterator->obj->lt->clone(iterator->obj) : NULL;
+			tmp->next->obj = iterator->obj; /* != NULL ?
+				iterator->obj->lt->clone(iterator->obj) : NULL; */
 			tmp = tmp->next;
 		}
 		tmp->next = NULL;

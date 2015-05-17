@@ -1,0 +1,26 @@
+
+there are a few shell scripts provided   (*.sh):
+
+test1.sh lets you run an individual inputfile against all algorithms
+test2.sh will let you run all test input files on test1.sh
+
+test3.sh will run like test2.sh but also provides for 10K and 1M inputs
+
+test2a.sh and test3a.sh  will also provide the detail on the aging
+algorithm for in18 and in60.
+
+I will not provide more data for -opf for larger files .. 
+
+
+Please use test2.sh if you downloaded the TestData.tar.bz2
+or test3.sh if you downloaded the TestDataLarge.tar.bz2
+
+Download into a directory 
+cp *.sh to your directory and run appropriate test shell script.
+
+then run ./diffit  <yourdir>  <mytestdatadir>
+it will tell you which files are different.
+Then you can work on those.
+
+
+

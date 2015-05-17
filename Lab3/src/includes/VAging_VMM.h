@@ -21,12 +21,14 @@
 #define VAGING_VMM_H
 
 #include <vmm.h>
+#include <FIFO.h>
 
 struct VAging_VMM {
 	VMM_LT lt;
 	unsigned num_frames;
 	int *frame_table;
 	PTE page_table[NUM_VIRT_PAGES];
+	FIFO free_frames;
 	unsigned instr_count, unmaps, maps, pageins, pageouts, zeros;
 	unsigned used_frames;
 	uint32_t age_vector[NUM_VIRT_PAGES];

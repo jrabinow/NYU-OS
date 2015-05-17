@@ -21,6 +21,7 @@
 #define NRU_VMM_H
 
 #include <vmm.h>
+#include <FIFO.h>
 #include <random.h>
 
 struct NRU_VMM {
@@ -28,6 +29,7 @@ struct NRU_VMM {
 	unsigned num_frames;
 	int *frame_table;
 	PTE page_table[NUM_VIRT_PAGES];
+	FIFO free_frames;
 	unsigned instr_count, unmaps, maps, pageins, pageouts, zeros;
 	unsigned used_frames, replacement_request;
 };

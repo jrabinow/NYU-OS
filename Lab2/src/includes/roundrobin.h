@@ -14,7 +14,7 @@
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with Lab2-Scheduler.  If not, see <http://www.gnu.org/licenses/>.
+ *  along with Lab2-Scheduler. If not, see <http://www.gnu.org/licenses/>.
  */
 
 #ifndef RR_H
@@ -33,10 +33,13 @@ struct RR_Scheduler_LT {
 	Scheduler (*clone)(const Scheduler);
 	char *(*to_string)(const Scheduler);
 	/* ---------- SCHEDULER ---------- */
+	void (*read_input)(Scheduler, FILE*);
 	unsigned (*get_readyqueue_size)(const Scheduler);
 	Process (*get_event)(Scheduler);
 	void (*put_event)(Scheduler, Process);
-	void (*run)(Scheduler, FILE*, bool);
+	Process (*peek_readyq)(const Scheduler);
+	void (*run)(Scheduler, bool);
+	void (*print_info)(Scheduler);
 	/* --------- RR_SCHEDULER --------- */
 	int (*get_quantum)(const Scheduler);
 	void (*set_quantum)(Scheduler, int);

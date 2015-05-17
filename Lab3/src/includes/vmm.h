@@ -28,6 +28,7 @@
 /* header files that are specific to this project (passed to gcc with -I option) */
 #include <utils.h>
 #include <object.h>
+#include <FIFO.h>
 
 #define NUM_VIRT_PAGES 64
 
@@ -61,6 +62,7 @@ struct VMM {
 	unsigned num_frames;
 	int *frame_table;
 	PTE page_table[NUM_VIRT_PAGES];
+	FIFO free_frames;
 	unsigned instr_count, unmaps, maps, pageins, pageouts, zeros;
 };
 

@@ -14,7 +14,7 @@
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with Lab2-Scheduler.  If not, see <http://www.gnu.org/licenses/>.
+ *  along with Lab2-Scheduler. If not, see <http://www.gnu.org/licenses/>.
  */
 
 #ifndef COMPARABLE_H
@@ -23,20 +23,20 @@
 /* Interface. No actual Comparable object will be created. However, we now have
  * a common interface to interact with all objects implementing comparable.
  * To implement an interface, all that needs to be done is to define the
- * new object's lookup table as extending the interface's lookup table. Also,
- * all variables declared in the interface's definition must also be declared in
- * the object */
+ * object's lookup table as extending the interface's lookup table. Also, all
+ * variables declared in the interface's class definition must also be
+ * declared in the object */
 
 #include <object.h>
 
 struct Comparable_LT {
 	Builder bld;
 	bool lt_initialized;
-	struct Comparable *(*new)(const Builder, ...);
+	struct Comparable *(*new)(const struct Builder*, ...);
 	void (*delete)(struct Comparable*);
 	struct Comparable *(*clone)(const struct Comparable*);
 	char *(*to_string)(const struct Comparable*);
-	int (*cmp_array[2])(const struct Comparable*, const struct Comparable*);
+	int (*compare)(const struct Comparable*, const struct Comparable*);
 };
 
 typedef struct Comparable_LT* Comparable_LT;

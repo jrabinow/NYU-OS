@@ -14,7 +14,7 @@
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with Lab2-Scheduler.  If not, see <http://www.gnu.org/licenses/>.
+ *  along with Lab2-Scheduler. If not, see <http://www.gnu.org/licenses/>.
  */
 
 #ifndef SCHEDULER_H
@@ -51,7 +51,9 @@ struct Scheduler_LT {
 	unsigned (*get_readyqueue_size)(Scheduler);
 	Process (*get_event)(Scheduler);
 	void (*put_event)(Scheduler, Process);
+	Process (*peek_readyq)(const Scheduler);
 	void (*run)(Scheduler, FILE*, bool);
+	void (*print_info)(Scheduler);
 };
 
 typedef struct Scheduler_LT* Scheduler_LT;

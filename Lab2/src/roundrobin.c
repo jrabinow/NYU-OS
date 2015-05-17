@@ -14,7 +14,7 @@
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with Lab2-Scheduler.  If not, see <http://www.gnu.org/licenses/>.
+ *  along with Lab2-Scheduler. If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include <roundrobin.h>
@@ -28,6 +28,7 @@ static void put_event(Scheduler sched, Process proc);
 static Process get_event(Scheduler sched);
 static int get_quantum(const Scheduler sched);
 static void set_quantum(Scheduler sched, int quantum);
+static Process peek_readyq(Scheduler sched);
 
 static struct RR_Scheduler_LT RR_lt = {
 	NULL,
@@ -36,9 +37,12 @@ static struct RR_Scheduler_LT RR_lt = {
 	&delete,
 	&clone,
 	&to_string,
+	NULL,
 	&readyq_size,
 	&get_event,
 	&put_event,
+	&peek_readyq,
+	NULL,
 	NULL,
 	&get_quantum,
 	&set_quantum
@@ -122,6 +126,13 @@ static void put_event(Scheduler sched, Process proc)
 	proc->preempt_after = this->quantum;
 	this->ready_queue->lt->put(this->ready_queue, (Object) proc);
 	this->size++;
+}
+
+static Process peek_readyq(Scheduler sched)
+{
+	RR_Scheduler this = (RR_Scheduler) sched;
+
+	return (Process) this->ready_queue->lt->peek(this->ready_queue);
 }
 
 static int get_quantum(const Scheduler this)
