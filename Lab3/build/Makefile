@@ -9,7 +9,7 @@ endif
 
 BINARY=mmu
 
-all: CFLAGS += -Ofast -fomit-frame-pointer
+all: CFLAGS += -Ofast
 all: LDFLAGS += -s
 all: depend $(BINARY)
 

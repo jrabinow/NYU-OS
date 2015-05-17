@@ -1,0 +1,93 @@
+#!/usr/bin/env perl
+
+use warnings;
+use strict;
+use Getopt::Long;
+
+sub LT_gen {
+	my %object = @_;
+	print "struct ", $object{"CLASS"}, "_LT lt = {\n";
+	print "\tNULL,\n";
+	print "\tfalse,\n";
+	print "\t&$_->{NAME},\n" foreach(@{$object{"PROTOTYPES"}});
+	print "};\n\n";
+}
+
+sub Builder_gen {
+	my %object = @_;
+	print "const struct Builder __", $object{"CLASS"}, "__ = {\n";
+	print "\t&", $object{"SUPER"}, ",\n";
+	print "\t(Lookup_Table) &lt,\n";
+	print "\tsizeof(struct ", $object{"CLASS"}, "),\n";
+	print "\t\"", $object{"CLASS"}, "\"\n";
+	print "};\n\n";
+}
+
+sub prototype_gen {
+	my %object = @_;
+	print "static $_->{TYPE} $_->{NAME}$_->{ARGS};\n" foreach(@{$object{"PROTOTYPES"}});
+}
+
+sub parse_file {
+	my $file_name = shift;
+	my @types = shift;
+	my $object_types = join("|", @types);
+	print $object_types,"\n";
+	open my $objfile, "<", $file_name or die "$!";
+
+	my $multiline_comment = 0;
+	my $line;
+	do {
+		$line = <$objfile>;
+		$multiline_comment = $multiline_comment and $line !~ /\*\// or $line =~ /\/\*.*(?!\*\/)/;
+	} while($line =~ /^\s*((\/\/.*)|(\/\*.*))?/ or $multiline_comment);
+	$line =~ /^\s*public\s*class\s*([a-zA-Z_]\w*)\s*implements\s*([a-zA-Z_]\w*)\s*;/ or die "Invalid file $file_name...";
+	my %class_info = (
+		CLASS => $1,
+		SUPER => $2,
+	);
+	my @prototypes;
+
+	while(<$objfile>) {
+		if($_ =~ /^\s*public\s+((unsigned\s+)?int|short|char|void|(long\s+)?long|float|(long\s+)?double|$object_types)\s+([a-zA-Z_]\w*)(\([^)]+\))/) {
+			my $proto = {
+				TYPE => $1,
+				NAME => $5,
+				ARGS => $6
+			};
+			push @prototypes, $proto;
+		}
+	}
+	close $objfile;
+	$class_info{"PROTOTYPES"} = [ @prototypes ];
+
+	return %class_info;
+}
+
+sub extract_types {
+	my @types;
+	for my $dir_name(@_) {
+		for my $file_name(glob "$dir_name/*") {
+			open my $file, "<", $file_name or die "$!";
+			while(<$file>) {
+				#	if($_ =~ /^\s*typedef/) {
+				#	while($_ !~ /^typedef(.|\n)*;x
+
+				push @types, $2 if($_ =~ /^\s*typedef\s+struct\s+([a-zA-Z_]\w*(?!_LT))\s*\*\s*([a-zA-Z_]\w*(?!_LT))\s*;/);
+			}
+			close $file;
+		}
+	}
+	return @types;
+}
+
+my @includeDirs;
+GetOptions("I=s" => \@includeDirs) or die("Error in command line arguments\n");
+my @types = &extract_types(@includeDirs);
+
+foreach(@ARGV) {
+	my %class_info = &parse_file($_, @types);
+	&LT_gen(%class_info);
+	&Builder_gen(%class_info);
+	&prototype_gen(%class_info);
+}

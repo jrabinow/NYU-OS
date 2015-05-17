@@ -2,20 +2,20 @@
 
 #  Copyright (C) 2014 Julien Rabinow <jnr305@nyu.edu>
 #
-#  This file is part of Lab3-Mem-manager.
+#  This file is part of Lab2-Scheduler.
 #
-#  Lab3-Mem-manager is free software: you can redistribute it and/or modify
+#  Lab2-Scheduler is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
 #  the Free Software Foundation, either version 3 of the License, or
 #  (at your option) any later version.
 #
-#  Lab3-Mem-manager is distributed in the hope that it will be useful,
+#  Lab2-Scheduler is distributed in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU General Public License for more details.
 #
 #  You should have received a copy of the GNU General Public License
-#  along with Lab3-Mem-manager. If not, see <http://www.gnu.org/licenses/>.
+#  along with Lab2-Scheduler. If not, see <http://www.gnu.org/licenses/>.
 
 function contains()
 {
@@ -33,66 +33,29 @@ function contains()
 
 function run_diff_test()
 {
-	passed_tests=0
-	out_format=OPFS
-	for input in "${input_testdir}"/*
+	# we pipe the directory listing through sort to ensure all tests are done in numerical order
+	for input in $(ls "${input_testdir}"/input*|sort -nk2 -t't')
 	do
-		filename=$(basename $input)
-		frames=${input_numframes[$filename]}
-		for algo in ${algos}; do 
-			testnum=${filename##*in}"_"${algo}"_"${frames}"_"${out_format}
-			if ! test -f "${output_testdir}/out_in${testnum}"; then
-				continue
-			fi
-			if $verbose; then
-				echo "---------- TEST in$testnum ----------" >&2
-			fi
-			if $show_all || (! $show_all && [ $(contains ${suppress_diffs[@]} "${testnum}") != 1 ]); then
-				./"${binary}" ${opts} -f"${frames}" -a"${algo}" -o"${out_format}" "${input}" "${rfile}" > "${tmpfile}"
-				if [ $? != 0 ]; then
-					echo $frames $input >&2
-				fi
-				res=$(diff -b -B -E "${tmpfile}" "${output_testdir}/out_in${testnum}")
-				[[ "${res}"  == "" ]] && test -f ${tmpfile} && let passed_tests=$passed_tests+1 || ($verbose && echo "FAIL." >&2 )
+		for algo in F L S R2 R5 R20; do 
+			echo "---------- TEST "${input##*input}"_"${algo}" ----------"
+			if $show_all || (! $show_all && [ $(contains ${suppress_diffs[@]} "${algo}") != 1 ]); then
+				./"${binary}" ${opts} -s"${algo}" "${input}" "${rfile}" >"${tmpfile}"
+				diff -b -B -E "${tmpfile}" "${output_testdir}"/output"${input##*input}"_"${algo}"
 			fi
 		done
 	done
-	echo $passed_tests
 }
 
 function run_leak_test()
 {
-	out_format=
-	frames=4
-	input="${input_testdir}"/in18
-	for algo in ${algos}; do 
-		echo "---------- TEST "${input##*in}"_"${algo}"_"${frames}" ----------" >&2
-		if $show_all || (! $show_all && [ $(contains ${suppress_leaks[@]} "${algo}") != 1 ]); then
-			valgrind ./"${binary}" ${opts} -f"${frames}" -a"${algo}" -o"${out_format}" "${input}" "${rfile}" > /dev/null 2> "${tmpfile}"
-			grep -A5 'LEAK SUMMARY' "${tmpfile}" |grep -v '0 bytes in 0 blocks'|cut -d' ' -f2-
-			tail -1 "${tmpfile}"|grep -v '0 errors from 0 contexts'|cut -d' ' -f2-
-		fi
-	done
-
-	frames=8
-	input="${input_testdir}"/in60
-	for algo in ${algos}; do 
-		echo "---------- TEST "${input##*in}"_"${algo}"_"${frames}" ----------" >&2
-		if $show_all || (! $show_all && [ $(contains ${suppress_leaks[@]} "${algo}") != 1 ]); then
-			valgrind ./"${binary}" ${opts} -f"${frames}" -a"${algo}" -o"${out_format}" "${input}" "${rfile}" > /dev/null 2> "${tmpfile}"
-			grep -A5 'LEAK SUMMARY' "${tmpfile}" |grep -v '0 bytes in 0 blocks'|cut -d' ' -f2-
-			tail -1 "${tmpfile}"|grep -v '0 errors from 0 contexts'|cut -d' ' -f2-
-		fi
-	done
-
-	frames=32
-	for input in "${input_testdir}"/in1K4 "${input_testir}"/inrd1K "${input_testir}"/in10K3
+	# we pipe the directory listing through sort to ensure all tests are done in numerical order
+	for input in $(ls "${input_testdir}"/input*|sort -nk2 -t't')
 	do
-		for algo in ${algos}; do 
-			echo "---------- TEST "${input##*in}"_"${algo}"_"${frames}" ----------" >&2
+		for algo in F L S R2 R5 R20; do 
+			echo "---------- TEST "${input##*input}"_"${algo}" ----------"
 			if $show_all || (! $show_all && [ $(contains ${suppress_leaks[@]} "${algo}") != 1 ]); then
-				valgrind ./"${binary}" ${opts} -f"${frames}" -a"${algo}" -o"${out_format}" "${input}" "${rfile}" > /dev/null 2> "${tmpfile}"
-				grep -A5 'LEAK SUMMARY' "${tmpfile}" |grep -v '0 bytes in 0 blocks'|cut -d' ' -f2-
+				valgrind ./"${binary}" ${opts} -s"${algo}" "${input}" "${rfile}" 2>"${tmpfile}" >/dev/null
+				grep -A5 'LEAK SUMMARY' "${tmpfile}"|grep -v '0 bytes in 0 blocks'|cut -d' ' -f2-
 				tail -1 "${tmpfile}"|grep -v '0 errors from 0 contexts'|cut -d' ' -f2-
 			fi
 		done
@@ -101,28 +64,17 @@ function run_leak_test()
 
 function run_benchmark()
 {
-	frames=4
-	input="${input_testdir}"/in18
-	for algo in ${algos}; do 
-		./"${binary}" ${opts} -f"${frames}" -a"${algo}" "${input}" "${rfile}" > /dev/null
-	done
-	frames=8
-	input="${input_testdir}"/in60
-	for algo in ${algos}; do 
-		./"${binary}" ${opts} -f"${frames}" -a"${algo}" "${input}" "${rfile}" > /dev/null
-	done
-	frames=32
-	for input in "${input_testdir}"/in1K4 "${input_testir}"/inrd1K "${input_testir}"/in10K3
+	for input in "${input_testdir}"/input*
 	do
-		for algo in ${algos}; do 
-			./"${binary}" ${opts} -f"${frames}" -a"${algo}" "${input}" "${rfile}" > /dev/null
+		for algo in F L S R2 R5 R20; do 
+			./"${binary}" ${opts} -s"${algo}" "${input}" "${rfile}" > /dev/null
 		done
 	done
 }
 
 function main()
 {
-	local binary=mmu				# binary file name
+	local binary=scheduler				# binary file name
 	local opts=					# options to pass to binary program
 	local input_testdir=../tests/inputs		# directory containing sample inputs
 	local output_testdir=../tests/references	# directory containing reference outputs
@@ -138,11 +90,6 @@ function main()
 	local suppress_leaks=( )			# don't show memory leak errors for tests in array
 	local show_all=true				# ignore suppress* arrays and print all errors
 	local tmpfile=$(mktemp)
-
-	# non-generic variables
-	local algos="N l r f s c C a A"			# algorithm identifiers
-	declare -A input_numframes			# associate to each input file its corresponding number of frames
-	input_numframes=([in18]=4 [in60]=8 [in1K4]=32 [inrd1K]=32 [in10K3]=32 [in1M2]=32)
 
 	while getopts "b:d:e:hmor:sv" opt; do
 		case ${opt} in
