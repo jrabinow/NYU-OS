@@ -14,14 +14,14 @@
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with Lab2-Scheduler.  If not, see <http://www.gnu.org/licenses/>.
+ *  along with Lab2-Scheduler. If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include <heap.h>
 
 #define START_MEM	16
 
-static Heap new(const Builder, int);
+static Heap new(const Builder);
 static void delete(Heap);
 static Heap clone(Heap);
 static unsigned size(const Heap);
@@ -51,7 +51,7 @@ const struct Builder __Heap__ = {
 	"Heap"
 };
 
-static Heap new(const Builder bld, int cmp_func)
+static Heap new(const Builder bld)
 {
 	Heap h = __Heap__.super->lt->new(bld);
 
@@ -59,7 +59,6 @@ static Heap new(const Builder bld, int cmp_func)
 		bld->lt->lt_initialized = true;
 	h->data = (Comparable*) xmalloc(START_MEM * sizeof(Comparable));
 	h->size = 0;
-	h->cmp_func = cmp_func;
 
 	return h;
 }
@@ -79,7 +78,7 @@ static Heap clone(Heap this)
 {
 	unsigned i;
 	Heap h = __Heap__.super->lt->clone(this);
-	
+
 	/* find smallest power of 2 >= this->size. Compatible with 32-bit
 	 * integers */
 	i = this->size + (this->size == 0) - 1;
@@ -111,7 +110,7 @@ static void put(Heap this, Comparable cp)
 	if(i >= START_MEM && (i & (i - 1)) == 0)
 		this->data = (Comparable*) xrealloc(this->data, (i << 1) * sizeof(Comparable));
 	this->data[i] = cp;
-	while(i > 0 && cp->lt->cmp_array[this->cmp_func](cp, this->data[i >> 1]) < 0) {
+	while(i > 0 && cp->lt->compare(cp, this->data[i >> 1]) < 0) {
 		swap = this->data[i >> 1];
 		this->data[i >> 1] = cp;
 		this->data[i] = swap;
@@ -128,8 +127,8 @@ static Comparable get(Heap this)
 		cp = this->data[0];
 		this->data[0] = this->data[--this->size];
 		while(i + 1 < this->size) {
-			min = this->data[i]->lt->cmp_array[this->cmp_func](this->data[i], this->data[i + 1]) < 0 ? i : i + 1;
-			if(this->data[i]->lt->cmp_array[this->cmp_func](this->data[i << 1], this->data[min]) > 0) {
+			min = this->data[i]->lt->compare(this->data[i], this->data[i + 1]) < 0 ? i : i + 1;
+			if(this->data[i]->lt->compare(this->data[i << 1], this->data[min]) > 0) {
 				swap = this->data[i >> 1];
 				this->data[i >> 1] = this->data[min];
 				this->data[min] = swap;
@@ -137,7 +136,7 @@ static Comparable get(Heap this)
 			} else
 				break;
 		}
-		if(i < this->size && this->data[i]->lt->cmp_array[this->cmp_func](this->data[i >> 1], this->data[i]) > 0) {
+		if(i < this->size && this->data[i]->lt->compare(this->data[i >> 1], this->data[i]) > 0) {
 			swap = this->data[i >> 1];
 			this->data[i >> 1] = this->data[i];
 			this->data[i] = swap;

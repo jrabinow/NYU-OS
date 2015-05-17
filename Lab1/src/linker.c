@@ -1,3 +1,22 @@
+/*
+ *  Copyright (C) 2014 Julien Rabinow <jnr305@nyu.edu>
+ *
+ *  This file is part of Lab1-Linker.
+ *
+ *  Lab1-Linker is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  Lab1-Linker is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with Lab1-Linker.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "linker.h"
 
 int main(int argc, char **argv)
@@ -9,11 +28,6 @@ int main(int argc, char **argv)
 	Module *mod = NULL;
 	Array modules, symtable, unused_uselist;
 
-	if(argc < 2) {
-		usage(argv[0]);
-		exit(EXIT_FAILURE);
-	}
-
 	while((opt = getopt(argc, argv, "cfh")) != -1) {
 		switch(opt) {
 			case 'c':
@@ -23,16 +37,16 @@ int main(int argc, char **argv)
 				conserve_mem = false;
 				break;
 			case 'h':
-				usage(argv[0]);
-				return 0;
+				usage(argv[0], stdout);
+				exit(EXIT_SUCCESS);
 			default:
-				usage(argv[0]);
+				usage(argv[0], stderr);
 				exit(EXIT_FAILURE);
 		}
 	}
 
 	if(argc - optind == 0) {	/* if all parameters are options */
-		usage(argv[0]);
+		usage(argv[0], stderr);
 		exit(EXIT_FAILURE);
 	}
 
@@ -177,7 +191,8 @@ void print_relative(int addr, int val, Module *m)
 	if(val >= 10000)
 		printf("%03d: 9999 Error: Illegal opcode; treated as 9999", addr);
 	else if(val % 1000 > m->module_size)
-		printf("%03d: %04lu Error: Relative address exceeds module size; zero used", addr, (unsigned long) (opcode(val) + m->base_offset));
+		printf("%03d: %04lu Error: Relative address exceeds module size; zero used", addr,
+				(unsigned long) (opcode(val) + m->base_offset));
 	else
 		printf("%03d: %04lu", addr, (unsigned long) (val + m->base_offset));
 }
@@ -215,10 +230,12 @@ void addto_symbol_table(Array *symtable, Module *m)
 		if( ! symbol_index(symtable, m->symbols[i]->sym, &index)) {
 			if(m->symbols[i]->local_offset >= m->module_size) {
 				printf("Warning: Module %u: %s to big %lu (max=%lu) assume zero relative\n", m->module_id,
-						m->symbols[i]->sym, (unsigned long) m->symbols[i]->local_offset, (unsigned long) (m->module_size - 1));
+						m->symbols[i]->sym, (unsigned long) m->symbols[i]->local_offset,
+						(unsigned long) (m->module_size - 1));
 				m->symbols[i]->local_offset = 0;
 			}
-		 	memmove(&symtable->symbol[index + 1], &symtable->symbol[index], (symtable->size - index) * sizeof(Symbol*));
+			memmove(&symtable->symbol[index + 1], &symtable->symbol[index],
+					(symtable->size - index) * sizeof(Symbol*));
 			symtable->symbol[index] = m->symbols[i];
 			symtable->symbol[index]->offset = m->symbols[i]->local_offset + m->base_offset;
 			symtable->size++;

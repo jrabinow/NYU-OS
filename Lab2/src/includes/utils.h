@@ -14,7 +14,7 @@
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with Lab2-Scheduler.  If not, see <http://www.gnu.org/licenses/>.
+ *  along with Lab2-Scheduler. If not, see <http://www.gnu.org/licenses/>.
  */
 
 #ifndef UTILS_H
@@ -64,7 +64,6 @@ FILE *xfopen(const char *path, const char *mode);
 void *xrealloc(void *ptr, size_t size);
 void *xmalloc(size_t size);
 char *xstrdup(const char *str);
-unsigned max(unsigned val1, unsigned val2);
 
 /* finishes reading line. For use with scanf/fscanf */
 #define empty_buffer(stream)	{\

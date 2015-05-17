@@ -1,0 +1,23 @@
+# --------- Course related ----------
+Assignments
+Lectures
+Modern Operating Systems.pdf
+
+# --------- Development files ----------
+cscope.*
+.*.swp
+
+# --------- Build files ----------
+*/build/.depend
+*/build/*.o
+*/build/linker
+*/build/scheduler
+*/build/mmu
+*/build/iosched
+
+# --------- Test files ----------
+*/tests/inputs/*
+*/tests/references/*
+*/tests/*.tar
+*/tests/*.bz2
+*/tests/rfile

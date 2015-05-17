@@ -14,7 +14,7 @@
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with Lab2-Scheduler.  If not, see <http://www.gnu.org/licenses/>.
+ *  along with Lab2-Scheduler. If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include <scheduler.h>
@@ -24,6 +24,9 @@ static void delete(Scheduler);
 static Scheduler clone(const Scheduler);
 static char *to_string(const Scheduler);
 static void run(Scheduler, FILE*, bool);
+static void print_info(Scheduler this);
+
+static bool fill_event_queue(Scheduler this);
 
 static struct Scheduler_LT lt = {
 	NULL,
@@ -35,7 +38,9 @@ static struct Scheduler_LT lt = {
 	NULL,
 	NULL,
 	NULL,
+	NULL,
 	&run,
+	&print_info
 };
 
 const struct Builder __Scheduler__ = {
@@ -108,7 +113,6 @@ static char *to_string(const Scheduler this)
 	} else
 		return str;
 }
-
 
 Process read_process(FILE *stream, pid_t pid)
 {
@@ -316,3 +320,19 @@ static void run(Scheduler this, FILE *stream, bool trace)
 	print_final_stats(this);
 }
 
+static bool fill_event_queue(Scheduler this)
+{
+	const Process peek_ready, peek_IO, peek_input;
+
+
+	return true;
+}
+
+static void print_info(Scheduler this)
+{
+	unsigned throughput = 0;
+
+	printf("SUM: %ld %.2lf %.2lf %.2lf %.2lf %.3lf\n", this->last_event,
+		this->cpu_use, this->io_use, this->total_turnaround,
+		this->total_cpu_waiting, throughput);
+}

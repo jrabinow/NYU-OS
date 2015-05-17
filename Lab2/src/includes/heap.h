@@ -14,7 +14,7 @@
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with Lab2-Scheduler.  If not, see <http://www.gnu.org/licenses/>.
+ *  along with Lab2-Scheduler. If not, see <http://www.gnu.org/licenses/>.
  */
 
 #ifndef HEAP_H
@@ -26,7 +26,7 @@
 struct Heap_LT {
 	Builder bld;
 	bool lt_initialized;
-	struct Heap *(*new)(const Builder, int);
+	struct Heap *(*new)(const Builder);
 	void (*delete)(struct Heap*);
 	struct Heap *(*clone)(struct Heap*);
 	char *(*to_string)(const struct Heap*);
@@ -43,7 +43,6 @@ struct Heap {
 	Heap_LT lt;
 	Comparable *data;
 	unsigned size;
-	int cmp_func;
 };
 
 typedef struct Heap* Heap;

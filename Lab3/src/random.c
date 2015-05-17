@@ -70,7 +70,8 @@ void init_random(char *input_path)
 						* sizeof(unsigned long)) + 2;
 					break;
 				default: /* invalid matching by fscanf */
-					perror("Error reading value from random number file ");
+					perror("Error reading value from "
+							"random number file ");
 					fputs("Skipping line…", stderr);
 					clearerr(input);
 					i--;
@@ -124,7 +125,7 @@ int myrandom(int burst)
 		if(random_file != NULL)
 			init_random(random_file);
 		else
-			return -1;
+			return 0;
 	}
 	if( ! emptied_file && needs_more_mem(randvals))
 		fill_randvals_array();

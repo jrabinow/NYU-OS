@@ -14,7 +14,7 @@
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with Lab2-Scheduler.  If not, see <http://www.gnu.org/licenses/>.
+ *  along with Lab2-Scheduler. If not, see <http://www.gnu.org/licenses/>.
  */
 
 #ifndef PROCESS_H
@@ -57,6 +57,8 @@ struct Process_LT {
 	char *(*to_string)(const Process);
 	int (*cmp_array[2])(const Process, const Process);
 };
+
+typedef struct Process_LT* Process_LT;
 
 extern const struct Builder __Process__;
 

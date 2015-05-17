@@ -2,7 +2,7 @@ CC=gcc
 SRCDIR=../src
 TESTDIR=../tests
 INCLUDES=$(addprefix $(SRCDIR), /includes)
-CFLAGS=$(addprefix -I, $(INCLUDES)) -Wall -Wextra
+CFLAGS=$(addprefix -I, $(INCLUDES)) -Wall -Wextra -DC99
 ifeq ($(CC), gcc)
 	CFLAGS += --short-enums
 endif
@@ -35,16 +35,16 @@ check: $(BINARY)
 	$(TESTDIR)/tester.sh
 
 test: $(BINARY)
-	$(TESTDIR)/tester.sh -oi
+	$(TESTDIR)/tester.sh output
 
 memtest: $(BINARY)
-	$(TESTDIR)/tester.sh -mi
+	$(TESTDIR)/tester.sh memory
 
-show: $(BINARY)
-	$(TESTDIR)/tester.sh -o
+test-suppress: $(BINARY)
+	$(TESTDIR)/tester.sh -s output
 
-memshow: $(BINARY)
-	$(TESTDIR)/tester.sh -m
+memtest-suppress: $(BINARY)
+	$(TESTDIR)/tester.sh -s memory
 
 compress: $(BINARY)
 	gzexe $(BINARY) && $(RM) $(BINARY)~
@@ -52,11 +52,11 @@ compress: $(BINARY)
 decompress:
 	test -f $(BINARY) && gzexe -d $(BINARY) && $(RM) $(BINARY)~ || $(MAKE)
 
-.PHONY: clean distclean depend test memtest show memshow check compress\
+.PHONY: clean distclean depend check test memtest test-suppress memtest-suppress compress\
 	decompress
 
 clean:
-	$(RM) *.o $(addsuffix /*.gch, $(INCLUDES))
+	$(RM) *.o $(addsuffix /*.gch, $(INCLUDES)) $(BINARY)~
 
 distclean: clean
 	$(RM) $(BINARY)

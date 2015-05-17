@@ -67,11 +67,18 @@ static VMM new(const Builder bld, int num_frames)
 	if(bld == &__VMM__)
 		bld->lt->lt_initialized = true;
 
+#define new(builder, ...)	((__##builder##__).lt->new((const Builder)\
+		&__##builder##__, ##__VA_ARGS__))
+
 	this->num_frames = num_frames;
 	this->frame_table = (int*) xmalloc(num_frames * sizeof(int));
 	initialize_vector(this->frame_table, &init_value, sizeof(int),
 			num_frames);
 	memset(this->page_table, 0, NUM_VIRT_PAGES * sizeof(PTE));
+	this->free_frames = new(FIFO);
+	for(init_value = 0; init_value < (int) this->num_frames; init_value++)
+		this->free_frames->lt->put(this->free_frames,
+				(void*)(intptr_t) init_value);
 	this->instr_count = this->unmaps = this->maps = this->pageins =
 	this->pageouts = this->zeros = 0;
 
@@ -82,16 +89,15 @@ static void delete(VMM this)
 {
 	free(this->frame_table);
 
+	this->free_frames->lt->delete(this->free_frames);
+
 	__VMM__.super->lt->delete(this);
 }
 
 static VMM clone(VMM this)
 {
 	VMM new_vmm = __VMM__.super->lt->clone(this);
-
-	new_vmm->frame_table = (int*) xmalloc(this->num_frames * sizeof(int));
-	memcpy(new_vmm->frame_table, this->frame_table,
-			this->num_frames * sizeof(int));
+	new_vmm->free_frames = this->free_frames->lt->clone(this->free_frames);
 
 	return new_vmm;
 }
@@ -114,7 +120,6 @@ Instruction read_instruction(FILE *stream)
 				exit(EXIT_FAILURE);
 		}
 		if(val2 < 0 || val2 >= NUM_VIRT_PAGES) {
-			fputs("WHAT THE HELL!!!\n", stderr);
 			fprintf(stderr, "Error: invalid virtual page number %d\n", val2);
 			exit(EXIT_FAILURE);
 		}
@@ -130,7 +135,9 @@ static void run(VMM this, FILE *input, Verbose_Flag flags)
 
 	while((instr = read_instruction(input)).valid) {
 		if( ! this->page_table[instr.virtual_page].present) {
-			index = this->lt->get_frame_index(this);
+			index = //this->free_frames->size != 0 ?
+				//(int) (intptr_t) this->free_frames->lt->get(this->free_frames) :
+				this->lt->get_frame_index(this);
 
 			if(flags & OUTPUT)
 				printf("==> inst: %d %d\n", instr.operation_type,
@@ -216,6 +223,7 @@ void unmap(VMM this, int frame_index, Verbose_Flag flags)
 	/* Technically, we should set this.frame_table[frame_index] to EMPTY.
 	 * However, the only reason we are unmapping this page is to map in
 	 * another page. So the EMPTY value will be overwritten very soon */
+//	this->free_frames->lt->put(this->free_frames, (Object) (intptr_t) frame_index);
 	this->unmaps++;
 }
 

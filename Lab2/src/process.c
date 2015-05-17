@@ -14,7 +14,7 @@
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with Lab2-Scheduler.  If not, see <http://www.gnu.org/licenses/>.
+ *  along with Lab2-Scheduler. If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include <process.h>
@@ -24,6 +24,7 @@ static Process new(const Builder bld, pid_t pid, unsigned arrival_time,
 static char *to_string(const Process p);
 static int cmp_total_cpu(const Process p1, const Process p2);
 static int cmp_finish_evt_time(const Process p1, const Process p2);
+/*static int compare(const Process, const Process);*/
 
 static struct Process_LT lt = {
 	NULL,
@@ -34,6 +35,7 @@ static struct Process_LT lt = {
 	&to_string,
 	{ &cmp_total_cpu,
 	  &cmp_finish_evt_time }
+	/*&compare */
 };
 
 const struct Builder __Process__ = {
@@ -96,3 +98,12 @@ static int cmp_finish_evt_time(const Process p1, const Process p2)
 {
 	return p2->FT - p1->FT;
 }
+
+/*
+static int compare(const Process p1, const Process p2)
+{
+	if(p1->remaining_CPU_time < p2->remaining_CPU_time)
+		return -1;
+	else
+		return p1->remaining_CPU_time > p2->remaining_CPU_time;
+} */

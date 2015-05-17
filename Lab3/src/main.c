@@ -33,6 +33,7 @@ int main(int argc, char *argv[])
 	if((need_random && argc - optind != 2) ||
 			(argc - optind != 1 && argc - optind != 2)) {
 		usage(argv[0], stderr);
+		vmm->delete(vmm);
 		exit(EXIT_FAILURE);
 	} else if(need_random)
 		init_random(argv[optind + 1]);

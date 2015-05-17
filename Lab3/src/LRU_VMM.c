@@ -59,7 +59,6 @@ static VMM new(const Builder bld, int num_frames)
 		xmalloc(sizeof(struct Elem));
 	this->list_ptrs[num_frames - 1]->index = num_frames - 1;
 	this->list_ptrs[num_frames - 1]->next = NULL;
-	this->tail = this->list_ptrs[num_frames - 1];
 
 	for(i = num_frames - 2; i >= 0; i--) {
 		this->list_ptrs[i] = (struct Elem*)
@@ -91,26 +90,31 @@ static void delete(VMM vmm)
 
 static VMM clone(const VMM vmm)
 {
-	unsigned i;
+	struct Elem *tmp, *iterator;
+	int index;
 	LRU_VMM this = (LRU_VMM) vmm,
 		new_lru = __LRU_VMM__.super->lt->clone(this);
 
-	new_lru->list_ptrs = (struct Elem**)
-		xmalloc(sizeof(struct Elem*) * this->num_frames);
+	iterator = this->sorted_list;
 
-	for(i = 0; i < this->num_frames; i++) {
-		new_lru->list_ptrs[i] = (struct Elem*)
-			xmalloc(sizeof(struct Elem));
-		new_lru->list_ptrs[i]->index = this->list_ptrs[i]->index;
+	new_lru->sorted_list = tmp = (struct Elem*) xmalloc(sizeof(struct Elem));
+	tmp->index = iterator->index;
+
+	if(this->page_table[tmp->index].present) {
+		index = this->page_table[tmp->index].frame_number;
+		this->list_ptrs[index] = tmp;
 	}
-	for(i = 0; i <= this->num_frames; i++) {
-		new_lru->list_ptrs[i]->next = this->list_ptrs[i]->next == NULL?
-			NULL : new_lru->list_ptrs[this->list_ptrs[i]->next->index];
-		new_lru->list_ptrs[i]->prev = this->list_ptrs[i]->prev == NULL?
-			NULL : new_lru->list_ptrs[this->list_ptrs[i]->prev->index];
+	while((iterator = iterator->next) != NULL) {
+		tmp->next = (struct Elem*) xmalloc(sizeof(struct Elem));
+		tmp->next->index = iterator->index;
+		if(this->page_table[tmp->index].present) {
+			index = this->page_table[tmp->index].frame_number;
+			this->list_ptrs[index] = tmp;
+		}
+		tmp = tmp->next;
 	}
-	new_lru->sorted_list = new_lru->list_ptrs[this->sorted_list->index];
-	new_lru->tail = new_lru->list_ptrs[this->tail->index];
+	tmp->next = NULL;
+	this->tail = tmp;
 
 	return (VMM) new_lru;
 }
@@ -119,11 +123,11 @@ static int get_frame_index(VMM vmm)
 {
 	LRU_VMM this = (LRU_VMM) vmm;
 	struct Elem *tmp = this->sorted_list;
-	int index;
 
 #ifdef DEBUG
+	/*puts(__func__); */
 	unsigned i;
-	puts(__func__);
+	puts("BEFORE");
 	printf("this->sorted_list: %p\tthis->tail: %p\n", this->sorted_list, this->tail);
 	for(i = 0; i < this->num_frames; i++) {
 		printf("%d: %p (%d) ->", i, this->list_ptrs[i], this->frame_table[this->list_ptrs[i]->index]);
@@ -133,21 +137,19 @@ static int get_frame_index(VMM vmm)
 			puts("null");
 	}
 #endif
-
+	/* remove list head */
 	if(tmp->next != NULL) {
 		this->sorted_list = tmp->next;
 		tmp->next->prev = NULL;
 	}
+	/* put element tmp in last position of list */
 	if(this->tail != tmp) {
-		this->tail->next = tmp;
 		tmp->prev = this->tail;
-		this->tail = this->tail->next;
+		this->tail = this->tail->next = tmp;
 		tmp->next = NULL;
 	}
-
-	index = tmp->index;
-
 #ifdef DEBUG
+	puts("AFTER");
 	printf("this->sorted_list: %p\tthis->tail: %p\n", this->sorted_list, this->tail);
 	for(i = 0; i < this->num_frames; i++) {
 		printf("%d: %p (%d) ->", i, this->list_ptrs[i], this->frame_table[this->list_ptrs[i]->index]);
@@ -157,19 +159,18 @@ static int get_frame_index(VMM vmm)
 			puts("null");
 	}
 #endif
-
-	return index;
+	return tmp->index;
 }
 
 static void update(VMM vmm, int page_index)
 {
+	/*puts(__func__); */
 	LRU_VMM this = (LRU_VMM) vmm;
 	int frame_index = this->page_table[page_index].frame_number;
 	struct Elem *tmp = this->list_ptrs[frame_index];
-
 #ifdef DEBUG
 	unsigned i;
-	puts(__func__);
+	puts("BEFORE");
 	printf("this->sorted_list: %p\tthis->tail: %p\n", this->sorted_list, this->tail);
 	for(i = 0; i < this->num_frames; i++) {
 		printf("%d: %p (%d) ->", i, this->list_ptrs[i], this->frame_table[this->list_ptrs[i]->index]);
@@ -179,21 +180,26 @@ static void update(VMM vmm, int page_index)
 			puts("null");
 	}
 #endif
+	/* update list head if need be (accessed element is head of list) */
 	if(this->sorted_list == tmp) {
 		this->sorted_list = tmp->next;
+		/* assumes more than 1 frames */
 		tmp->next->prev = NULL;
 	}
+	/* move accessed element at end of list */
 	if(this->tail != tmp) {
+		/* remove tmp from linked list */
 		if(tmp->prev != NULL)
 			tmp->prev->next = tmp->next;
-		tmp->next->prev = tmp->prev;
-		this->tail->next = tmp;
+		tmp->next->prev = tmp->prev; /* tmp != this->tail => tmp->next != NULL */
+		/* add tmp to end of linked list */
 		tmp->prev = this->tail;
-		this->tail = this->tail->next;
+		this->tail = this->tail->next = tmp;
 		tmp->next = NULL;
 	}
 
 #ifdef DEBUG
+	puts("AFTER");
 	printf("this->sorted_list: %p\tthis->tail: %p\n", this->sorted_list, this->tail);
 	for(i = 0; i < this->num_frames; i++) {
 		printf("%d: %p (%d) ->", i, this->list_ptrs[i], this->frame_table[this->list_ptrs[i]->index]);

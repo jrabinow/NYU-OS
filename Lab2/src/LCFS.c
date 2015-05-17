@@ -14,7 +14,7 @@
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with Lab2-Scheduler.  If not, see <http://www.gnu.org/licenses/>.
+ *  along with Lab2-Scheduler. If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include <LCFS.h>
@@ -25,6 +25,7 @@ static Scheduler clone(const Scheduler sched);
 static unsigned readyq_size(const Scheduler sched);
 static void put_event(Scheduler sched, Process proc);
 static Process get_event(Scheduler sched);
+static Process peek_readyq(Scheduler this);
 
 static struct Scheduler_LT LCFS_lt = {
 	NULL,
@@ -33,9 +34,12 @@ static struct Scheduler_LT LCFS_lt = {
 	&delete,
 	&clone,
 	NULL,
+	NULL,
 	&readyq_size,
 	&get_event,
 	&put_event,
+	&peek_readyq,
+	NULL,
 	NULL
 };
 
@@ -55,6 +59,7 @@ static Scheduler new(const Builder bld)
 	if(bld == &__LCFS_Scheduler__)
 		bld->lt->lt_initialized = true;
 	sched->ready_queue = new(Stack);
+
 	return (Scheduler) sched;
 }
 
@@ -98,3 +103,9 @@ static Process get_event(Scheduler sched)
 	return (Process) this->ready_queue->lt->pop(this->ready_queue);
 }
 
+static Process peek_readyq(Scheduler sched)
+{
+	LCFS_Scheduler this = (LCFS_Scheduler) sched;
+
+	return (Process) this->ready_queue->lt->peek(this->ready_queue);
+}
