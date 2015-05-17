@@ -19,6 +19,13 @@ cscope.*
 */tests/out_in*
 */tests/inputs/*
 */tests/references/*
-*/tests/*.tar
-*/tests/*.bz2
 */tests/rfile
+
+# --------- Other ----------
+*.tar.xz
+*.txz
+*.tar
+*.tar.bz2
+*.tar.gz
+*.zip
+*.log

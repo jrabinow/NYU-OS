@@ -5,6 +5,7 @@ Memory-management unit lab for Professor Hubertus Franke's OS course
 
 Compile:
 -----------
+$ cd build
 $ make
 
 Usage:
