@@ -86,7 +86,7 @@ function main()
 	local leak_test=false				# perform memory leak tests
 	local benchmark=false				# perform benchmark
 	local verbose=false				# increase verbosity
-	local count=1
+	local count=1					# default number of times to run benchmark test
 
 	local suppress_diffs=( 9 )			# don't show diff errors for tests in array
 	local suppress_leaks=(11 12 13 14 15 16 17 18)	# don't show memory leak errors for tests in array
@@ -96,7 +96,7 @@ function main()
 	while getopts "b:d:e:hmor:sv" opt; do
 		case ${opt} in
 			b)	# redefine binary
-				binary="${OPTARG}";
+				binary="${OPTARG}"
 				;;
 			d)	# redefine input_testdir
 				input_testdir="${OPTARG}"
@@ -193,7 +193,21 @@ EOF
 		let average=total/count
 		let average_secs=average/1000
 		let average_milli=average%1000
-		echo -e "\n$count executions\nTotal time:\t\t$time_secs.${time_milli}s\nAverage runtime:\t$average_secs.${average_milli}s"
+		echo -e "\n$count executions"
+		echo -e "Total time:\t\t$time_secs.${time_milli}s"
+		echo -e "Average runtime:\t$average_secs.${average_milli}s"
+	fi
+
+	if $diff_test || $leak_test; then
+		echo "SUMMARY:"
+		# !!! NON-GENERIC !!!
+		let numtests=$(echo "${algos}"|tr -d ' \n'|wc -c)*5	# 5 test cases per algorithm
+		if $diff_test; then
+			echo "Passed diff tests: $passed_diffs/$numtests"
+		fi
+	#	if $leak_test; then
+	#		echo "Passed diff tests: $passed_diffs/$numtests"
+	#	fi
 	fi
 
 	rm -f $tmpfile

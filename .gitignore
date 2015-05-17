@@ -16,6 +16,7 @@ cscope.*
 */build/iosched
 
 # --------- Test files ----------
+*/tests/out_in*
 */tests/inputs/*
 */tests/references/*
 */tests/*.tar

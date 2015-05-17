@@ -31,16 +31,16 @@ decompress: RECIPE = decompress
 decompress: all
 
 linker:
-	cd Lab1/ && $(MAKE) $(RECIPE)
+	$(MAKE) -C Lab1/ $(RECIPE)
 
 scheduler:
-	cd Lab2/src/ && $(MAKE) $(RECIPE)
+	$(MAKE) -C Lab2/src/ $(RECIPE)
 
 mmu:
-	cd Lab3/src/ && $(MAKE) $(RECIPE)
+	$(MAKE) -C Lab3/src $(RECIPE)
 
 io_sched:
-	cd Lab4/src/ && $(MAKE) $(RECIPE)
+	$(MAKE) -C Lab4/src $(RECIPE)
 
 .PHONY: all linker scheduler mmu io_sched clean distclean check test memtest\
 	show memshow compress decompress
