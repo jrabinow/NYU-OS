@@ -135,8 +135,8 @@ static void run(VMM this, FILE *input, Verbose_Flag flags)
 
 	while((instr = read_instruction(input)).valid) {
 		if( ! this->page_table[instr.virtual_page].present) {
-			index = this->free_frames->size != 0 ?
-				(int) (intptr_t) this->free_frames->lt->get(this->free_frames) :
+			index = //this->free_frames->size != 0 ?
+				//(int) (intptr_t) this->free_frames->lt->get(this->free_frames) :
 				this->lt->get_frame_index(this);
 
 			if(flags & OUTPUT)
