@@ -2,18 +2,29 @@ CC=gcc
 SRCDIR=../src
 TESTDIR=../tests
 INCLUDES=$(addprefix $(SRCDIR), /includes)
-CFLAGS=$(addprefix -I, $(INCLUDES)) -Wall -Wextra -Wpedantic -ansi -DC99
+CFLAGS=$(addprefix -I, $(INCLUDES)) -Wall -Wextra -Wpedantic -ansi -march=native
 ifeq ($(CC), gcc)
+	GCCVERSION := $(shell $(CC) -dumpversion|cut -d. -f1,2)
+	HAS_OFAST := $(shell echo '$(GCCVERSION) >= 4.6' | bc)
 	CFLAGS += --short-enums
+debug:  CFLAGS += -Og
+endif
+ifeq ($(CC), clang)
+	HAS_OFAST := 1
+endif
+
+ifeq ($(HAS_OFAST), 1)
+all:	CFLAGS += -Ofast
+else
+all:	CFLAGS += -O3
 endif
 
 BINARY=linker
 
-all: CFLAGS += -Ofast -fomit-frame-pointer
 all: LDFLAGS += -s
 all: depend $(BINARY)
 
-debug: CFLAGS += -g -DDEBUG
+debug: CFLAGS += -g -DDEBUG -ggdb
 debug: depend $(BINARY)
 
 $(BINARY): utils.o token.o symbol.o instruction.o module.o
