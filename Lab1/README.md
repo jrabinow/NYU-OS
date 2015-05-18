@@ -5,7 +5,7 @@ Linker lab for Professor Hubertus Franke's OS course
 
 Compile:
 -----------
-$ cd build
+$ cd build  
 $ make
 
 Usage:
