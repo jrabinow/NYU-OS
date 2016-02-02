@@ -22,7 +22,7 @@
 void usage(char *progname, FILE *outstream)
 {
 	fprintf(outstream, "Usage: %s [OPTION]... FILE1 ...\n", progname);
-	(void) fputs(		"Options:	-c	Conserve memory by reading input files twice\n"
+	(void) fputs(	"Options:	-c	Conserve memory by reading input files twice\n"
 			"		-f	Enable faster processing by keeping modules in memory (default)\n"
 			"		-h	Print this help message\n", outstream);
 }

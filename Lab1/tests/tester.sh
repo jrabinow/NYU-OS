@@ -34,6 +34,7 @@ function contains()
 function run_diff_test()
 {
 	# we pipe the directory listing through sort to ensure all tests are done in numerical order
+	let passed_diffs=0
 	for input in $(ls "${input_testdir}"/input-*|sort -nk2 -t'-')
 	do
 		for suffix in ${input##*-}
@@ -181,8 +182,8 @@ EOF
 		for((i = 0; i < $count; i++)) {
 			output=$((time run_benchmark) |& grep real)
 			min=$(echo $output|cut -b5-|cut -dm -f1)
-			sec=$(echo $output|cut -dm -f2|cut -d. -f1)
-			milli=$(echo ${output##*m*.}|cut -ds -f1)
+			sec=10#$(echo $output|cut -dm -f2|cut -d. -f1)
+			milli=10#$(echo ${output##*m*.}|cut -ds -f1)
 			let total=total+min*60000+sec*1000+milli
 			if $verbose; then
 				echo ${min}m$sec.${milli}s
