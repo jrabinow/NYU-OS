@@ -1,4 +1,7 @@
 #include "includes/utils.h"
+#include <assert.h>
+
+#define MEMPOOL_SIZE	5
 
 typedef struct {
 	struct Elem *next;
@@ -9,23 +12,30 @@ int main(int argc, char **argv)
 {
 	int i;
 	struct mempool mp;
+	void *memptrs[MEMPOOL_SIZE], *tmpptr;
 
-	void *a, *b, *c, *d, *e;
+	assert(MEMPOOL_SIZE == 5);
+	mempool_create(&mp, sizeof(Elem), MEMPOOL_SIZE);
+	assert(mp.mem != NULL);
+	assert(mp.ptrs != NULL);
 
-	printf("%d %d\n", sizeof(Elem), sizeof(unsigned));
-	mempool_create(&mp, sizeof(Elem), 5);
-
-	a = mempool_alloc(&mp);
-	b = mempool_alloc(&mp);
-	c = mempool_alloc(&mp);
-	d = mempool_alloc(&mp);
-	printf("%d\n%d\n%d\n%d\n", a, b, c, d);
-	mempool_free(&mp, b);
-	e = mempool_alloc(&mp);
-	b = mempool_alloc(&mp);
-	printf("----------------\n%d\n%d\n%d\n%d\n%d\n", a, b, c, d, e);
+	for(i = 0; i < MEMPOOL_SIZE - 1; i++) {
+		memptrs[i] = mempool_alloc(&mp);
+		if(i > 0)
+			assert(memptrs[i-1] + sizeof(Elem) + sizeof(unsigned) == memptrs[i]);
+	}
+	tmpptr = memptrs[1];
+	mempool_free(&mp, memptrs[1]);
+	memptrs[1] = mempool_alloc(&mp);
+	assert(tmpptr == memptrs[1]);
+	memptrs[MEMPOOL_SIZE - 1] = mempool_alloc(&mp);
+	assert(memptrs[MEMPOOL_SIZE - 2] + sizeof(Elem) + sizeof(unsigned) == memptrs[MEMPOOL_SIZE - 1]);
+	tmpptr = mempool_alloc(&mp);
+	assert(tmpptr == NULL);
 
 	mempool_delete(&mp);
+
+	puts("All tests passed");
 
 	return 0;
 }

@@ -142,8 +142,13 @@ void *mempool_alloc(struct mempool *mp)
 		}
 	}
 */
-	*(unsigned*) mp->ptrs[mp->index] = mp->index;
-	return mp->ptrs[mp->index++] + sizeof(unsigned);
+	void *ptr = NULL;
+
+	if(mp->index < mp->nmemb) {
+		*(unsigned*) mp->ptrs[mp->index] = mp->index;
+		ptr = (void*) mp->ptrs[mp->index++] + sizeof(unsigned);
+	}
+	return ptr;
 }
 
 void mempool_free(struct mempool *mp, void *ptr)
