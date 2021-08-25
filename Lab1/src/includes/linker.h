@@ -32,8 +32,8 @@
 #define MAX_USELIST_SIZE	16
 #define MAX_DEFLIST_SIZE	16
 
-int linenum, lineoffset, global_offset;
-const char *current_workfile;
+extern int linenum, lineoffset, global_offset;
+extern const char *current_workfile;
 
 #include "token.h"
 #include "symbol.h"

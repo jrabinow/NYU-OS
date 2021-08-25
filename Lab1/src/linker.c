@@ -19,6 +19,9 @@
 
 #include "linker.h"
 
+int linenum, lineoffset, global_offset;
+const char *current_workfile;
+
 int main(int argc, char **argv)
 {
 	bool conserve_mem = false;	/* keep all modules in memory by default */
